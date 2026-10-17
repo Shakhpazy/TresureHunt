@@ -8,7 +8,7 @@ EMPTY = ""
 class TresureMap:
 
 
-    def __init__(self, size: int, staticWalls: int):
+    def __init__(self, size, staticWalls=1):
         if size <= 2:
             raise ValueError(size, "Size must be greater than 2")
         if staticWalls < 0:
