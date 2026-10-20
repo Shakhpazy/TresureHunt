@@ -5,6 +5,20 @@ This is for TCSS 435 AI
 
 Each run creates a square map with a randomly selected side length from 8 to 16 cells. About 15% of its cells contain static walls; each map also has one trap and one treasure. Select **Regenerate Grid** below the grid to generate a new grid.
 
+## Sample Grid
+
+Example 1:
+
+![Example 1](images/GridExample1.png)
+
+Example 2:
+
+![Example 2](images/GridExample2.png)
+
+Example 3:
+
+![Example 3](images/GridExample3.png)
+
 ## Set up the virtual environment
 
 Run these commands from the project folder. If Python is not installed, install it first.
