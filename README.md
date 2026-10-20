@@ -57,12 +57,12 @@ Activate it:
 source .venv/bin/activate
 ```
 
-### Install Pygame
+### Install dependencies
 
-With the virtual environment activated, install Pygame:
+With the virtual environment activated, install the dependencies (Pygame) listed in `requirements.txt`:
 
 ```sh
-python -m pip install pygame
+python -m pip install -r requirements.txt
 ```
 
 ### Run the game
