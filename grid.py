@@ -9,10 +9,10 @@ class TresureMap:
 
 
     def __init__(self, size, staticWalls=1):
-        if size <= 2:
-            raise ValueError(size, "Size must be greater than 2")
-        if staticWalls < 0:
-            raise ValueError(staticWalls, "walls must be greater that -1")
+        if size < 8:
+            raise ValueError(size, "Size must be greater than 7")
+        if staticWalls < 1 :
+            raise ValueError(staticWalls, "Walls must be greater than 1")
         if staticWalls > size * size - 2:
             raise ValueError("There must be room for the treasure and trap")
         
@@ -24,21 +24,21 @@ class TresureMap:
         return self.tresuremap
     
     def createNewMap(self, size: int):
-        map = [[EMPTY for _ in range(size)] for _ in range(size)]
+        my_map = [[EMPTY for _ in range(size)] for _ in range(size)]
 
-        self.placeItem(map, self.staticWalls, STATIC_WALLS)
-        self.placeItem(map, 1, TRESURE)
-        self.placeItem(map, 1, TRAP)
+        self.placeItem(my_map, self.staticWalls, STATIC_WALLS)
+        self.placeItem(my_map, 1, TRESURE)
+        self.placeItem(my_map, 1, TRAP)
 
-        return map
+        return my_map
 
 
-    def placeItem(self, map, place, type):
+    def placeItem(self, the_map, item_amount, item_type):
         current = 0
-        while (current < place):
+        while (current < item_amount):
                row, col = self.generateRandomPosition()
-               if map[row][col] == EMPTY:
-                   map[row][col] = type
+               if the_map[row][col] == EMPTY:
+                   the_map[row][col] = item_type
                    current += 1
         
 

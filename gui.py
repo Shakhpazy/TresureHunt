@@ -15,7 +15,7 @@ class Gui:
 
     def __init__(self, grid, show_grid_lines=True):
         if not grid:
-            raise ValueError("2d matrix of size 3x3 or more should be inserted", grid)
+            raise ValueError("2d matrix of size 8x8 or more should be inserted", grid)
 
         pygame.init()
         self.grid = grid
