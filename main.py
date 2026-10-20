@@ -14,5 +14,5 @@ def create_random_map():
     return TresureMap(size, static_walls).getMap()
 
 
-gui = Gui(create_random_map())
+gui = Gui(create_random_map(), create_random_map)
 gui.run()
