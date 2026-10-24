@@ -1,5 +1,5 @@
 import pygame
-from grid import STATIC_WALLS, TRESURE, TRAP
+from grid import STATIC_WALLS, TRESURE, TRAP, START
 
 CELL_SIZE = 40
 BUTTON_AREA_HEIGHT = 44
@@ -11,11 +11,13 @@ GRID_COLOR = (0, 0, 0)
 WALL_BACKGROUND = (255, 220, 0)
 TREASURE_BACKGROUND = (255, 170, 200)
 TRAP_BACKGROUND = (0, 220, 220)
+START_BACKGROUND = (170, 220, 170)
 BUTTON_BACKGROUND = (55, 105, 170)
 BUTTON_TEXT_COLOR = (255, 255, 255)
 WALL_TEXT_COLOR = (0, 0, 0)
 TREASURE_TEXT_COLOR = (0, 140, 0)
 TRAP_TEXT_COLOR = (220, 0, 0)
+START_TEXT_COLOR = (0, 0, 0)
 
 class Gui:
 
@@ -73,6 +75,10 @@ class Gui:
                     cell_background = TRAP_BACKGROUND
                     symbol = "X"
                     symbol_color = TRAP_TEXT_COLOR
+                elif cell == START:
+                    cell_background = START_BACKGROUND
+                    symbol = "S"
+                    symbol_color = START_TEXT_COLOR
 
                 pygame.draw.rect(self.screen, cell_background, rectangle)
 

@@ -2,6 +2,8 @@ import random
 
 from grid import TresureMap
 from gui import Gui
+from agents import Agent
+from algos.dfs import DFS
 
 MIN_GRID_SIZE = 8
 MAX_GRID_SIZE = 16
@@ -14,5 +16,21 @@ def create_random_map():
     return TresureMap(size, static_walls).getMap()
 
 
-gui = Gui(create_random_map(), create_random_map)
+def regenerate_map():
+    new_grid = create_random_map()
+    agent.setGrid(new_grid)
+    result, execution_time = agent.run(DFS())
+    print(result)
+    print(f"DFS took {execution_time:.6f} seconds")
+    return new_grid
+
+
+grid = create_random_map()
+agent = Agent(grid)
+gui = Gui(grid, regenerate_map)
+
+result, execution_time = agent.run(DFS())
+print(result)
+print(f"DFS took {execution_time:.6f} seconds")
+
 gui.run()

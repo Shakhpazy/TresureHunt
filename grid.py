@@ -4,6 +4,7 @@ STATIC_WALLS = "#"
 TRESURE = "T"
 TRAP = "X"
 EMPTY = ""
+START = "S"
 
 class TresureMap:
 
@@ -29,6 +30,7 @@ class TresureMap:
         self.placeItem(my_map, self.staticWalls, STATIC_WALLS)
         self.placeItem(my_map, 1, TRESURE)
         self.placeItem(my_map, 1, TRAP)
+        self.placeItem(my_map, 1, START)
 
         return my_map
 
