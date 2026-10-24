@@ -19,9 +19,9 @@ def create_random_map():
 def regenerate_map():
     new_grid = create_random_map()
     agent.setGrid(new_grid)
-    result, execution_time = agent.run(DFS())
-    print(result)
-    print(f"DFS took {execution_time:.6f} seconds")
+    visited, solution, execution_time = agent.run(DFS())
+    gui.set_solution_path(solution)
+    gui.set_visited(visited)    
     return new_grid
 
 
@@ -29,8 +29,8 @@ grid = create_random_map()
 agent = Agent(grid)
 gui = Gui(grid, regenerate_map)
 
-result, execution_time = agent.run(DFS())
-print(result)
-print(f"DFS took {execution_time:.6f} seconds")
+visited, solution, execution_time = agent.run(DFS())
+gui.set_solution_path(solution)
+gui.set_visited(visited)
 
 gui.run()

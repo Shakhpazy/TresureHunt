@@ -8,17 +8,19 @@ class DFS(SearchAlgorith):
     DIRECTIONS = [[1,0],[0,1],[-1,0],[0,-1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def search(self, grid, startr, startc) -> dict[tuple[int, int], tuple[int, int]]:
+    def search(self, grid, startr, startc):
         n = len(grid)
         m = len(grid[0])
 
         stack = [(startr, startc)]
         seen = {(startr, startc): (-1, -1)}
+        treasure_loc = ()
 
         while stack:
             current_r, current_c = stack.pop()
 
             if grid[current_r][current_c] == TRESURE:
+                treasure_loc = (current_r, current_c)
                 break
 
             for dr, dc in self.DIRECTIONS:
@@ -29,4 +31,4 @@ class DFS(SearchAlgorith):
                     stack.append((current_r + dr, current_c + dc))
                     seen[(current_r + dr, current_c + dc)] = (current_r, current_c)
 
-        return seen
+        return seen, treasure_loc

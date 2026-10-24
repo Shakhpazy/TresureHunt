@@ -18,6 +18,8 @@ WALL_TEXT_COLOR = (0, 0, 0)
 TREASURE_TEXT_COLOR = (0, 140, 0)
 TRAP_TEXT_COLOR = (220, 0, 0)
 START_TEXT_COLOR = (0, 0, 0)
+VISITED_BACKGROUND = (200, 230, 255)
+SOLUTION_PATH_BACKGROUND = (160, 240, 160)
 
 class Gui:
 
@@ -40,11 +42,49 @@ class Gui:
         self.regenerate_button.centery = len(self.grid) * CELL_SIZE + BUTTON_AREA_HEIGHT // 2
         pygame.display.set_caption("Treasure Hunt")
 
+        self.solution_path = []
+        self.visited = []
+
+    def set_solution_path(self, solution):
+        self.solution_path = list(solution or [])
+
+    def set_visited(self, visited):
+        self.visited = list(visited or [])
+
     def get_screen_size(self):
         return (
             CELL_SIZE * len(self.grid[0]),
             CELL_SIZE * len(self.grid) + BUTTON_AREA_HEIGHT,
         )
+
+    def _draw_visited(self):
+        path_set = set(self.solution_path)
+
+        for r, c in self.visited:
+            if r < 0 or c < 0:
+                continue
+            if r >= len(self.grid) or c >= len(self.grid[0]):
+                continue
+
+            cell = self.grid[r][c]
+            if cell in (START, TRESURE):
+                continue
+
+            rectangle = pygame.Rect(
+                c * CELL_SIZE,
+                r * CELL_SIZE,
+                CELL_SIZE,
+                CELL_SIZE,
+            )
+
+            if (r, c) in path_set:
+                pygame.draw.rect(self.screen, SOLUTION_PATH_BACKGROUND, rectangle)
+                pygame.draw.circle(self.screen, (0, 120, 0), rectangle.center, CELL_SIZE // 6)
+            else:
+                pygame.draw.rect(self.screen, VISITED_BACKGROUND, rectangle)
+
+            if self.show_grid_lines:
+                pygame.draw.rect(self.screen, GRID_COLOR, rectangle, 1)
 
     def draw_grid(self):
         self.screen.fill(BACKGROUND_COLOR)
@@ -102,6 +142,10 @@ class Gui:
             button_text,
             button_text.get_rect(center=self.regenerate_button.center),
         )
+
+        self._draw_visited()
+        
+
         pygame.display.flip()
 
     def regenerate_grid(self):
