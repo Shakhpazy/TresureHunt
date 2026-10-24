@@ -2,7 +2,7 @@ import pygame
 from grid import STATIC_WALLS, TRESURE, TRAP, START
 
 CELL_SIZE = 40
-BUTTON_AREA_HEIGHT = 44
+SIDEBAR_WIDTH = 220
 BUTTON_WIDTH = 180
 BUTTON_HEIGHT = 32
 BACKGROUND_COLOR = (255, 255, 255)
@@ -23,13 +23,14 @@ SOLUTION_PATH_BACKGROUND = (160, 240, 160)
 
 class Gui:
 
-    def __init__(self, grid, on_regenerate, show_grid_lines=True):
+    def __init__(self, grid, on_regenerate, on_run=None, show_grid_lines=True):
         if not grid:
             raise ValueError("2d matrix of size 8x8 or more should be inserted", grid)
 
         pygame.init()
         self.grid = grid
         self.on_regenerate = on_regenerate
+        self.on_run = on_run
         self.show_grid_lines = show_grid_lines
         self.font = pygame.font.Font(None, 32)
         self.button_font = pygame.font.Font(None, 24)
@@ -37,9 +38,18 @@ class Gui:
         self.hand_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_HAND)
         self.button_hovered = False
         self.screen = pygame.display.set_mode(self.get_screen_size())
+        self.board_origin_x = 0
         self.regenerate_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
-        self.regenerate_button.centerx = self.screen.get_width() // 2
-        self.regenerate_button.centery = len(self.grid) * CELL_SIZE + BUTTON_AREA_HEIGHT // 2
+        self.run_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.reset_overlay_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+
+        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
+        start_y = 20
+        button_spacing = 12
+
+        self.regenerate_button.topleft = (button_x, start_y)
+        self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
+        self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
         pygame.display.set_caption("Treasure Hunt")
 
         self.solution_path = []
@@ -53,8 +63,8 @@ class Gui:
 
     def get_screen_size(self):
         return (
-            CELL_SIZE * len(self.grid[0]),
-            CELL_SIZE * len(self.grid) + BUTTON_AREA_HEIGHT,
+            SIDEBAR_WIDTH + CELL_SIZE * len(self.grid[0]),
+            CELL_SIZE * len(self.grid),
         )
 
     def _draw_visited(self):
@@ -71,7 +81,7 @@ class Gui:
                 continue
 
             rectangle = pygame.Rect(
-                c * CELL_SIZE,
+                self.board_origin_x + c * CELL_SIZE,
                 r * CELL_SIZE,
                 CELL_SIZE,
                 CELL_SIZE,
@@ -92,7 +102,7 @@ class Gui:
         for row in range(len(self.grid)):
             for col in range(len(self.grid[row])):
                 rectangle = pygame.Rect(
-                    col * CELL_SIZE,
+                    self.board_origin_x + col * CELL_SIZE,
                     row * CELL_SIZE,
                     CELL_SIZE,
                     CELL_SIZE,
@@ -129,31 +139,62 @@ class Gui:
                 if self.show_grid_lines:
                     pygame.draw.rect(self.screen, GRID_COLOR, rectangle, 1)
 
-        button_area = pygame.Rect(
+        sidebar_area = pygame.Rect(
+            self.screen.get_width() - SIDEBAR_WIDTH,
             0,
-            len(self.grid) * CELL_SIZE,
-            self.screen.get_width(),
-            BUTTON_AREA_HEIGHT,
+            SIDEBAR_WIDTH,
+            self.screen.get_height(),
         )
-        pygame.draw.rect(self.screen, BUTTON_AREA_BACKGROUND, button_area)
+        pygame.draw.rect(self.screen, BUTTON_AREA_BACKGROUND, sidebar_area)
         pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.regenerate_button)
-        button_text = self.button_font.render("Regenerate Grid", True, BUTTON_TEXT_COLOR)
+        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.run_button)
+        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.reset_overlay_button)
+
+        regenerate_text = self.button_font.render("Regenerate Grid", True, BUTTON_TEXT_COLOR)
         self.screen.blit(
-            button_text,
-            button_text.get_rect(center=self.regenerate_button.center),
+            regenerate_text,
+            regenerate_text.get_rect(center=self.regenerate_button.center),
+        )
+
+        run_text = self.button_font.render("Run", True, BUTTON_TEXT_COLOR)
+        self.screen.blit(
+            run_text,
+            run_text.get_rect(center=self.run_button.center),
+        )
+
+        reset_text = self.button_font.render("Reset View", True, BUTTON_TEXT_COLOR)
+        self.screen.blit(
+            reset_text,
+            reset_text.get_rect(center=self.reset_overlay_button.center),
         )
 
         self._draw_visited()
-        
-
         pygame.display.flip()
 
     def regenerate_grid(self):
         self.grid = self.on_regenerate()
         self.screen = pygame.display.set_mode(self.get_screen_size())
-        self.regenerate_button.centerx = self.screen.get_width() // 2
-        self.regenerate_button.centery = len(self.grid) * CELL_SIZE + BUTTON_AREA_HEIGHT // 2
+        self.board_origin_x = 0
+        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
+        start_y = 20
+        button_spacing = 12
+
+        self.regenerate_button.topleft = (button_x, start_y)
+        self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
+        self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
+        self.visited = []
+        self.solution_path = []
         self.draw_grid()
+
+    def reset_overlay(self):
+        self.visited = []
+        self.solution_path = []
+        self.draw_grid()
+
+    def run_algorithm(self):
+        if self.on_run:
+            self.on_run()
+            self.draw_grid()
 
     def run(self):
         running = True
@@ -167,7 +208,11 @@ class Gui:
                     self.show_grid_lines = not self.show_grid_lines
                     self.draw_grid()
                 elif event.type == pygame.MOUSEMOTION:
-                    hovering = self.regenerate_button.collidepoint(event.pos)
+                    hovering = (
+                        self.regenerate_button.collidepoint(event.pos)
+                        or self.run_button.collidepoint(event.pos)
+                        or self.reset_overlay_button.collidepoint(event.pos)
+                    )
                     if hovering != self.button_hovered:
                         self.button_hovered = hovering
                         cursor = self.hand_cursor if hovering else self.arrow_cursor
@@ -178,5 +223,17 @@ class Gui:
                     and self.regenerate_button.collidepoint(event.pos)
                 ):
                     self.regenerate_grid()
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and self.run_button.collidepoint(event.pos)
+                ):
+                    self.run_algorithm()
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and self.reset_overlay_button.collidepoint(event.pos)
+                ):
+                    self.reset_overlay()
 
         pygame.quit()

@@ -16,21 +16,23 @@ def create_random_map():
     return TresureMap(size, static_walls).getMap()
 
 
+def run_current_algorithm():
+    visited, solution, execution_time = agent.run(DFS())
+    gui.set_solution_path(solution)
+    gui.set_visited(visited)
+    print(solution)
+    print(f"DFS took {execution_time:.6f} seconds")
+    return visited, solution
+
+
 def regenerate_map():
     new_grid = create_random_map()
     agent.setGrid(new_grid)
-    visited, solution, execution_time = agent.run(DFS())
-    gui.set_solution_path(solution)
-    gui.set_visited(visited)    
     return new_grid
 
 
 grid = create_random_map()
 agent = Agent(grid)
-gui = Gui(grid, regenerate_map)
-
-visited, solution, execution_time = agent.run(DFS())
-gui.set_solution_path(solution)
-gui.set_visited(visited)
+gui = Gui(grid, regenerate_map, run_current_algorithm)
 
 gui.run()

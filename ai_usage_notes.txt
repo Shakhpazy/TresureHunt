@@ -1,0 +1,11 @@
+AI usage notes
+
+- Testing DFS algorithm
+  - testing and asked if my algo is correct
+
+- UI buttons
+  - run and reset
+  - sidebar layout
+
+Summary:
+The AI was used to validate the DFS behavior and confirm the algorithm's correctness before relying on it in the GUI and agent flow. It also helped connect the Run button to the current algorithm callback so the visualization updates from the search results.
