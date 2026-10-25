@@ -1,5 +1,7 @@
 import pygame
 from grid import STATIC_WALLS, TRESURE, TRAP, START
+from algos.dfs import DFS
+from algos.bfs import BFS 
 
 CELL_SIZE = 40
 SIDEBAR_WIDTH = 220
@@ -20,6 +22,7 @@ TRAP_TEXT_COLOR = (220, 0, 0)
 START_TEXT_COLOR = (0, 0, 0)
 VISITED_BACKGROUND = (200, 230, 255)
 SOLUTION_PATH_BACKGROUND = (160, 240, 160)
+ALGORITHMS = ["DFS", "BFS"]
 
 class Gui:
 
@@ -42,16 +45,19 @@ class Gui:
         self.regenerate_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.run_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.reset_overlay_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.selected_algo_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
 
         button_x = self.screen.get_width() - BUTTON_WIDTH - 20
         start_y = 20
         button_spacing = 12
 
         self.regenerate_button.topleft = (button_x, start_y)
-        self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
-        self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
+        self.reset_overlay_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing) 
+        self.run_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
+        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
         pygame.display.set_caption("Treasure Hunt")
 
+        self.current_algo_idx = 0
         self.solution_path = []
         self.visited = []
 
@@ -66,6 +72,11 @@ class Gui:
             SIDEBAR_WIDTH + CELL_SIZE * len(self.grid[0]),
             CELL_SIZE * len(self.grid),
         )
+
+    def _update_algorithm(self):
+        self.current_algo_idx += 1
+        if (self.current_algo_idx == len(ALGORITHMS)):
+            self.current_algo_idx = 0
 
     def _draw_visited(self):
         path_set = set(self.solution_path)
@@ -145,11 +156,15 @@ class Gui:
             SIDEBAR_WIDTH,
             self.screen.get_height(),
         )
+
+        #DRAWING ALL THE BUTTONS
         pygame.draw.rect(self.screen, BUTTON_AREA_BACKGROUND, sidebar_area)
         pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.regenerate_button)
         pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.run_button)
         pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.reset_overlay_button)
+        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.selected_algo_button)
 
+        #DRAWING ALL THE TEXT FOR THE BUTTONS
         regenerate_text = self.button_font.render("Regenerate Grid", True, BUTTON_TEXT_COLOR)
         self.screen.blit(
             regenerate_text,
@@ -168,6 +183,12 @@ class Gui:
             reset_text.get_rect(center=self.reset_overlay_button.center),
         )
 
+        algo_text = self.button_font.render(ALGORITHMS[self.current_algo_idx], True, BUTTON_TEXT_COLOR)
+        self.screen.blit(
+            algo_text,
+            algo_text.get_rect(center=self.selected_algo_button.center),
+        )
+
         self._draw_visited()
         pygame.display.flip()
 
@@ -182,6 +203,7 @@ class Gui:
         self.regenerate_button.topleft = (button_x, start_y)
         self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
         self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
+        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
         self.visited = []
         self.solution_path = []
         self.draw_grid()
@@ -235,5 +257,12 @@ class Gui:
                     and self.reset_overlay_button.collidepoint(event.pos)
                 ):
                     self.reset_overlay()
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and self.selected_algo_button.collidepoint(event.pos)
+                ):
+                    self._update_algorithm()
+                    self.draw_grid()
 
         pygame.quit()
