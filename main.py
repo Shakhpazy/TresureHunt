@@ -29,7 +29,7 @@ def run_current_algorithm():
     gui.set_solution_path(solution)
     gui.set_visited(visited)
     print(solution)
-    print(f"BFS took {execution_time:.6f} seconds")
+    print(f"{ALGORITHMS[gui.current_algo_idx]} took {execution_time:.6f} seconds")
     return visited, solution
 
 
