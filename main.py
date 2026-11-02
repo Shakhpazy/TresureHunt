@@ -6,6 +6,7 @@ from agents import Agent
 from algos.dfs import DFS
 from algos.bfs import BFS
 from algos.ucs import UCS
+from report import format_run_report
 from gui import ALGORITHMS
 
 GRID_SIZE = 10
@@ -32,18 +33,6 @@ def refresh_weights():
     gui.set_weights(weights)
 
 
-def print_cost_trail(solution, total_cost):
-    if not solution:
-        print("UCS found no path to the treasure")
-        return
-
-    running_cost = 0
-    for r, c in solution:
-        running_cost += weights[r][c]
-        print(f"({r}, {c}) w:{weights[r][c]} -> total {running_cost}")
-    print(f"Total cost: {total_cost}")
-
-
 def run_current_algorithm():
     algo_name = ALGORITHMS[gui.current_algo_idx]
 
@@ -61,10 +50,10 @@ def run_current_algorithm():
     visited, solution, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
     gui.set_solution_path(solution)
     gui.set_visited(visited)
-    print(solution)
-    print(f"{algo_name} took {execution_time:.6f} seconds")
-    if algo_name == "UCS":
-        print_cost_trail(solution, total_cost)
+    print(format_run_report(
+        algo_name, solution, nodes_expanded, execution_time, total_cost,
+        weights if algo_name == "UCS" else None,
+    ))
     return visited, solution
 
 
