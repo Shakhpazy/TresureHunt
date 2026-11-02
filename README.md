@@ -5,6 +5,13 @@ This is for TCSS 435 AI
 
 Each run creates a square map with a randomly selected side length from 8 to 16 cells. About 15% of its cells contain static walls; each map also has one trap and one treasure. Select **Regenerate Grid** below the grid to generate a new grid.
 
+## Algorithms
+
+Select an algorithm with the button in the sidebar, then click **Run**.
+
+- **DFS** and **BFS** treat every step as equal. Traps and walls cannot be entered.
+- **UCS** (uniform cost search) uses step costs. Selecting UCS lays a weight matrix over the current map and draws it as `w:number` in each cell: empty cells and the treasure get a random cost from 1 to 99, the start costs 0, and traps and walls cannot be entered. Run prints the path with its running cost and the total cost. Selecting UCS again, or clicking **Regenerate Grid** while UCS is selected, creates new weights. DFS and BFS never see the weights.
+
 ## Sample Grid
 
 Example 1:

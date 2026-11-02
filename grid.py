@@ -1,12 +1,15 @@
 import random
 
 STATIC_WALLS = "#"
-TRESURE = "T"
+TREASURE = "T"
 TRAP = "X"
 EMPTY = ""
 START = "S"
 
-class TresureMap:
+MIN_WEIGHT = 1
+MAX_WEIGHT = 99
+
+class TreasureMap:
 
 
     def __init__(self, size, staticWalls=1):
@@ -19,16 +22,16 @@ class TresureMap:
         
         self.size = size
         self.staticWalls = staticWalls
-        self.tresuremap = self.createNewMap(self.size)
+        self.treasuremap = self.createNewMap(self.size)
 
     def getMap(self):
-        return self.tresuremap
+        return self.treasuremap
     
     def createNewMap(self, size: int):
         my_map = [[EMPTY for _ in range(size)] for _ in range(size)]
 
         self.placeItem(my_map, self.staticWalls, STATIC_WALLS)
-        self.placeItem(my_map, 1, TRESURE)
+        self.placeItem(my_map, 1, TREASURE)
         self.placeItem(my_map, 1, TRAP)
         self.placeItem(my_map, 1, START)
 
@@ -50,4 +53,21 @@ class TresureMap:
         return row, col
 
 
-    
+def create_weight_matrix(grid):
+    """Cost of stepping onto each cell of grid, used only by uniform cost search.
+
+    Walls and traps are None (impassable), the start is 0 (never stepped onto),
+    and empty cells and the treasure get a random weight.
+    """
+    weights = []
+    for row in grid:
+        weight_row = []
+        for cell in row:
+            if cell in (STATIC_WALLS, TRAP):
+                weight_row.append(None)
+            elif cell == START:
+                weight_row.append(0)
+            else:
+                weight_row.append(random.randint(MIN_WEIGHT, MAX_WEIGHT))
+        weights.append(weight_row)
+    return weights
