@@ -1,12 +1,12 @@
 import random
 
 STATIC_WALLS = "#"
-TRESURE = "T"
+TREASURE = "T"
 TRAP = "X"
 EMPTY = ""
 START = "S"
 
-class TresureMap:
+class TreasureMap:
 
 
     def __init__(self, size, staticWalls=1):
@@ -19,16 +19,16 @@ class TresureMap:
         
         self.size = size
         self.staticWalls = staticWalls
-        self.tresuremap = self.createNewMap(self.size)
+        self.treasuremap = self.createNewMap(self.size)
 
     def getMap(self):
-        return self.tresuremap
+        return self.treasuremap
     
     def createNewMap(self, size: int):
         my_map = [[EMPTY for _ in range(size)] for _ in range(size)]
 
         self.placeItem(my_map, self.staticWalls, STATIC_WALLS)
-        self.placeItem(my_map, 1, TRESURE)
+        self.placeItem(my_map, 1, TREASURE)
         self.placeItem(my_map, 1, TRAP)
         self.placeItem(my_map, 1, START)
 

@@ -1,5 +1,5 @@
 from algos.search_algo import SearchAlgorith
-from grid import STATIC_WALLS, TRESURE, TRAP
+from grid import STATIC_WALLS, TREASURE, TRAP
 from collections import deque
 
 
@@ -21,7 +21,7 @@ class BFS(SearchAlgorith):
             for i in range(len(que)):
                 current_r, current_c = que.popleft()
 
-                if grid[current_r][current_c] == TRESURE:
+                if grid[current_r][current_c] == TREASURE:
                     treasure_loc = (current_r, current_c)
                     found = True
                     break

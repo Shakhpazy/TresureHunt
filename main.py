@@ -1,6 +1,6 @@
 import random
 
-from grid import TresureMap
+from grid import TreasureMap
 from gui import Gui
 from agents import Agent
 from algos.dfs import DFS
@@ -14,7 +14,7 @@ STATIC_WALL_RATIO = 0.15
 def create_random_map():
     size = GRID_SIZE
     static_walls = round(size * size * STATIC_WALL_RATIO)
-    return TresureMap(size, static_walls).getMap()
+    return TreasureMap(size, static_walls).getMap()
 
 
 def run_current_algorithm():

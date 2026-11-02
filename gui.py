@@ -1,5 +1,5 @@
 import pygame
-from grid import STATIC_WALLS, TRESURE, TRAP, START
+from grid import STATIC_WALLS, TREASURE, TRAP, START
 from algos.dfs import DFS
 from algos.bfs import BFS 
 
@@ -89,7 +89,7 @@ class Gui:
                 continue
 
             cell = self.grid[r][c]
-            if cell in (START, TRESURE):
+            if cell in (START, TREASURE):
                 continue
 
             rectangle = pygame.Rect(
@@ -129,7 +129,7 @@ class Gui:
                     cell_background = WALL_BACKGROUND
                     symbol = "#"
                     symbol_color = WALL_TEXT_COLOR
-                elif cell == TRESURE:
+                elif cell == TREASURE:
                     cell_background = TREASURE_BACKGROUND
                     symbol = "T"
                     symbol_color = TREASURE_TEXT_COLOR

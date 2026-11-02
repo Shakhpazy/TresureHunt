@@ -1,5 +1,5 @@
 from algos.search_algo import SearchAlgorith
-from grid import STATIC_WALLS, TRESURE, TRAP
+from grid import STATIC_WALLS, TREASURE, TRAP
 
 
 class DFS(SearchAlgorith):
@@ -26,7 +26,7 @@ class DFS(SearchAlgorith):
 
             seen[(current_r, current_c)] = parent
 
-            if grid[current_r][current_c] == TRESURE:
+            if grid[current_r][current_c] == TREASURE:
                 treasure_loc = (current_r, current_c)
                 break
 
