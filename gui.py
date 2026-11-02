@@ -50,21 +50,23 @@ class Gui:
         self.run_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.reset_overlay_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.selected_algo_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
-
-        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
-        start_y = 20
-        button_spacing = 12
-
-        self.regenerate_button.topleft = (button_x, start_y)
-        self.reset_overlay_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing) 
-        self.run_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
-        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
+        self._layout_buttons()
         pygame.display.set_caption("Treasure Hunt")
 
         self.current_algo_idx = 0
         self.solution_path = []
         self.visited = []
         self.weights = None
+
+    def _layout_buttons(self):
+        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
+        start_y = 20
+        button_spacing = 12
+
+        self.regenerate_button.topleft = (button_x, start_y)
+        self.reset_overlay_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
+        self.run_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
+        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
 
     def set_weights(self, weights):
         self.weights = weights
@@ -219,14 +221,7 @@ class Gui:
         self.grid = self.on_regenerate()
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self.board_origin_x = 0
-        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
-        start_y = 20
-        button_spacing = 12
-
-        self.regenerate_button.topleft = (button_x, start_y)
-        self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
-        self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
-        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
+        self._layout_buttons()
         self.visited = []
         self.solution_path = []
         self.draw_grid()
