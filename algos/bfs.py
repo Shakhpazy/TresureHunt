@@ -17,9 +17,11 @@ class BFS(SearchAlgorith):
         seen = {(startr, startc): (-1, -1)}
         treasure_loc = ()
         found = False
+        nodes_expanded = 0
         while que and not found:
             for i in range(len(que)):
                 current_r, current_c = que.popleft()
+                nodes_expanded += 1
 
                 if grid[current_r][current_c] == TREASURE:
                     treasure_loc = (current_r, current_c)
@@ -34,4 +36,4 @@ class BFS(SearchAlgorith):
                         que.append((current_r + dr, current_c + dc))
                         seen[(current_r + dr, current_c + dc)] = (current_r, current_c)
 
-        return seen, treasure_loc
+        return seen, treasure_loc, nodes_expanded

@@ -67,4 +67,5 @@ class UCS(SearchAlgorith):
                     heapq.heappush(priority_que,
                                    (cost + self.weights[next_r][next_c], next_r, next_c, (current_r, current_c)))
 
-        return seen, treasure_loc, total_cost
+        # UCS marks a cell seen only when popped, so every seen cell was expanded
+        return seen, treasure_loc, len(seen), total_cost

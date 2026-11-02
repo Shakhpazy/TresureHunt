@@ -58,7 +58,7 @@ def run_current_algorithm():
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
-    visited, solution, execution_time, total_cost = agent.run(current_algo)
+    visited, solution, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
     gui.set_solution_path(solution)
     gui.set_visited(visited)
     print(solution)
