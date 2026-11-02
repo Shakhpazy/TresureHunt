@@ -24,6 +24,8 @@ VISITED_BACKGROUND = (94, 237, 136)
 SOLUTION_PATH_BACKGROUND = (94, 237, 136)
 SOLUTION_PATH_SYMBOL_COLOR = (255,255,255)
 WEIGHT_TEXT_COLOR = (0, 0, 0)
+DROPDOWN_SELECTED_BACKGROUND = (45, 85, 165)
+DROPDOWN_BORDER_COLOR = (255, 255, 255)
 ALGORITHMS = ["DFS", "BFS", "UCS"]
 
 class Gui:
@@ -50,21 +52,24 @@ class Gui:
         self.run_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.reset_overlay_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.selected_algo_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self._layout_buttons()
+        pygame.display.set_caption("Treasure Hunt")
 
+        self.current_algo_idx = 0
+        self.dropdown_open = False
+        self.solution_path = []
+        self.visited = []
+        self.weights = None
+
+    def _layout_buttons(self):
         button_x = self.screen.get_width() - BUTTON_WIDTH - 20
         start_y = 20
         button_spacing = 12
 
         self.regenerate_button.topleft = (button_x, start_y)
-        self.reset_overlay_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing) 
+        self.reset_overlay_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
         self.run_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
         self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
-        pygame.display.set_caption("Treasure Hunt")
-
-        self.current_algo_idx = 0
-        self.solution_path = []
-        self.visited = []
-        self.weights = None
 
     def set_weights(self, weights):
         self.weights = weights
@@ -81,10 +86,68 @@ class Gui:
             CELL_SIZE * len(self.grid),
         )
 
-    def _update_algorithm(self):
-        self.current_algo_idx += 1
-        if (self.current_algo_idx == len(ALGORITHMS)):
-            self.current_algo_idx = 0
+    def _dropdown_option_rects(self):
+        # the list opens below the header, or above it when there is no room
+        list_height = len(ALGORITHMS) * BUTTON_HEIGHT
+        top = self.selected_algo_button.bottom
+        if top + list_height > self.screen.get_height():
+            top = self.selected_algo_button.top - list_height
+
+        return [
+            pygame.Rect(self.selected_algo_button.x, top + i * BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT)
+            for i in range(len(ALGORITHMS))
+        ]
+
+    def _select_algorithm(self, idx):
+        if idx == self.current_algo_idx:
+            return
+
+        self.current_algo_idx = idx
+        if self.on_algo_change:
+            self.on_algo_change()
+
+    def _handle_dropdown_click(self, pos):
+        # returns True when the click was used up by the dropdown
+        if self.selected_algo_button.collidepoint(pos):
+            self.dropdown_open = not self.dropdown_open
+            return True
+
+        if not self.dropdown_open:
+            return False
+
+        # an open list takes the click first, even when it lands on nothing,
+        # so closing it can never trigger the button underneath
+        self.dropdown_open = False
+        for idx, rect in enumerate(self._dropdown_option_rects()):
+            if rect.collidepoint(pos):
+                self._select_algorithm(idx)
+                break
+        return True
+
+    def _draw_dropdown(self):
+        header = self.selected_algo_button
+        header_text = self.button_font.render(
+            f"Algorithm: {ALGORITHMS[self.current_algo_idx]}", True, BUTTON_TEXT_COLOR
+        )
+        self.screen.blit(header_text, header_text.get_rect(midleft=(header.x + 10, header.centery)))
+
+        # triangle on the right: down when closed, up when open
+        arrow_x, arrow_y = header.right - 18, header.centery
+        if self.dropdown_open:
+            points = [(arrow_x - 6, arrow_y + 3), (arrow_x + 6, arrow_y + 3), (arrow_x, arrow_y - 4)]
+        else:
+            points = [(arrow_x - 6, arrow_y - 3), (arrow_x + 6, arrow_y - 3), (arrow_x, arrow_y + 4)]
+        pygame.draw.polygon(self.screen, BUTTON_TEXT_COLOR, points)
+
+        if not self.dropdown_open:
+            return
+
+        for idx, rect in enumerate(self._dropdown_option_rects()):
+            background = DROPDOWN_SELECTED_BACKGROUND if idx == self.current_algo_idx else BUTTON_BACKGROUND
+            pygame.draw.rect(self.screen, background, rect)
+            pygame.draw.rect(self.screen, DROPDOWN_BORDER_COLOR, rect, 1)
+            option_text = self.button_font.render(ALGORITHMS[idx], True, BUTTON_TEXT_COLOR)
+            self.screen.blit(option_text, option_text.get_rect(midleft=(rect.x + 10, rect.centery)))
 
     def _draw_visited(self):
         path_set = set(self.solution_path)
@@ -205,28 +268,16 @@ class Gui:
             reset_text.get_rect(center=self.reset_overlay_button.center),
         )
 
-        algo_text = self.button_font.render(ALGORITHMS[self.current_algo_idx], True, BUTTON_TEXT_COLOR)
-        self.screen.blit(
-            algo_text,
-            algo_text.get_rect(center=self.selected_algo_button.center),
-        )
-
         self._draw_visited()
         self._draw_weights()
+        self._draw_dropdown()
         pygame.display.flip()
 
     def regenerate_grid(self):
         self.grid = self.on_regenerate()
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self.board_origin_x = 0
-        button_x = self.screen.get_width() - BUTTON_WIDTH - 20
-        start_y = 20
-        button_spacing = 12
-
-        self.regenerate_button.topleft = (button_x, start_y)
-        self.run_button.topleft = (button_x, start_y + BUTTON_HEIGHT + button_spacing)
-        self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
-        self.selected_algo_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
+        self._layout_buttons()
         self.visited = []
         self.solution_path = []
         self.draw_grid()
@@ -252,11 +303,24 @@ class Gui:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_g:
                     self.show_grid_lines = not self.show_grid_lines
                     self.draw_grid()
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.dropdown_open:
+                    self.dropdown_open = False
+                    self.draw_grid()
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and self._handle_dropdown_click(event.pos)
+                ):
+                    self.draw_grid()
                 elif event.type == pygame.MOUSEMOTION:
                     hovering = (
                         self.regenerate_button.collidepoint(event.pos)
                         or self.run_button.collidepoint(event.pos)
                         or self.reset_overlay_button.collidepoint(event.pos)
+                        or self.selected_algo_button.collidepoint(event.pos)
+                        or (self.dropdown_open and any(
+                            rect.collidepoint(event.pos) for rect in self._dropdown_option_rects()
+                        ))
                     )
                     if hovering != self.button_hovered:
                         self.button_hovered = hovering
@@ -280,14 +344,5 @@ class Gui:
                     and self.reset_overlay_button.collidepoint(event.pos)
                 ):
                     self.reset_overlay()
-                elif (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                    and event.button == 1
-                    and self.selected_algo_button.collidepoint(event.pos)
-                ):
-                    self._update_algorithm()
-                    if self.on_algo_change:
-                        self.on_algo_change()
-                    self.draw_grid()
 
         pygame.quit()

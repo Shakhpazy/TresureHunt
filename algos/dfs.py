@@ -37,4 +37,5 @@ class DFS(SearchAlgorith):
 
                     stack.append(((current_r + dr, current_c + dc), (current_r, current_c)))
 
-        return seen, treasure_loc
+        # DFS marks a cell seen only when popped, so every seen cell was expanded
+        return seen, treasure_loc, len(seen)
