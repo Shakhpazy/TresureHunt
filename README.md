@@ -19,17 +19,30 @@ Example 3:
 
 ![Example 3](images/GridExample3.png)
 
+## Requirements
+
+**Python 3.10 or newer** (developed on 3.13). The code uses the `X | Y` type-union syntax, which raises a `TypeError` on Python 3.9 and older. Check your version with:
+
+```bash
+python3 --version   # macOS / Linux
+py --version        # Windows
+```
+
+If it is older than 3.10, install a newer Python from [python.org](https://www.python.org/downloads/) (or `brew install python@3.13` on macOS) before continuing. The `.python-version` file records the version the project was developed with, for tools like `pyenv` and `uv`.
+
 ## Set up the virtual environment
 
-Run these commands from the project folder. If Python is not installed, install it first.
+Run these commands from the project folder. A virtual environment is tied to the Python that created it, so create it with a 3.10+ interpreter. If you have an old `.venv` from an older Python, delete it first (`rm -rf .venv` on macOS, `rmdir /s /q .venv` on Windows).
 
 ### Windows
 
 Create the environment:
 
 ```powershell
-py -m venv .venv
+py -3.13 -m venv .venv
 ```
+
+Use any installed 3.10+ version in place of `3.13`.
 
 Activate it in PowerShell:
 
@@ -48,8 +61,10 @@ Or activate it in Command Prompt:
 Create the environment:
 
 ```bash
-python3 -m venv .venv
+python3.13 -m venv .venv
 ```
+
+Use `python3` instead if `python3 --version` already reports 3.10 or newer, or substitute any installed 3.10+ version for `3.13`.
 
 Activate it:
 

@@ -10,8 +10,8 @@ class TresureMap:
 
 
     def __init__(self, size, staticWalls=1):
-        if size < 8:
-            raise ValueError(size, "Size must be greater than 7")
+        if size != 10:
+            raise ValueError(size, "Size must always be 10*10")
         if staticWalls < 1 :
             raise ValueError(staticWalls, "Walls must be greater than 1")
         if staticWalls > size * size - 2:
