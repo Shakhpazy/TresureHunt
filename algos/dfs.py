@@ -12,23 +12,29 @@ class DFS(SearchAlgorith):
         n = len(grid)
         m = len(grid[0])
 
-        stack = [(startr, startc)]
-        seen = {(startr, startc): (-1, -1)}
+        # each entry is (cell, parent); a cell is only marked seen when popped
+        stack = [((startr, startc), (-1, -1))]
+        seen = {}
         treasure_loc = ()
 
         while stack:
-            current_r, current_c = stack.pop()
+            (current_r, current_c), parent = stack.pop()
+
+            # the same cell can be on the stack more than once
+            if (current_r, current_c) in seen:
+                continue
+
+            seen[(current_r, current_c)] = parent
 
             if grid[current_r][current_c] == TRESURE:
                 treasure_loc = (current_r, current_c)
                 break
 
             for dr, dc in self.DIRECTIONS:
-                if (0 <= (current_r + dr) < n and 0 <= (current_c + dc) < m and 
+                if (0 <= (current_r + dr) < n and 0 <= (current_c + dc) < m and
                     (current_r + dr, current_c + dc) not in seen and
                       grid[current_r + dr][current_c + dc] not in self.AVOID):
-                    
-                    stack.append((current_r + dr, current_c + dc))
-                    seen[(current_r + dr, current_c + dc)] = (current_r, current_c)
+
+                    stack.append(((current_r + dr, current_c + dc), (current_r, current_c)))
 
         return seen, treasure_loc
