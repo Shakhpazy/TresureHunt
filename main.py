@@ -25,7 +25,7 @@ def run_current_algorithm():
     else:
         current_algo = BFS()
 
-    visited, solution, execution_time = agent.run(current_algo)
+    visited, solution, execution_time, total_cost = agent.run(current_algo)
     gui.set_solution_path(solution)
     gui.set_visited(visited)
     print(solution)

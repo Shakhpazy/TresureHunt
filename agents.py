@@ -44,12 +44,14 @@ class Agent:
     def run(self, algo : SearchAlgorith):
         start_time = time.perf_counter()
 
-        visited, treasure_loc = algo.search(self.grid, self.startr, self.startc)
+        # weighted searches (UCS) also return their total cost as a third value
+        visited, treasure_loc, *extra = algo.search(self.grid, self.startr, self.startc)
+        total_cost = extra[0] if extra else None
 
         execution_time = time.perf_counter() - start_time
 
-        #return a list of solution path, return a list of all paths, return executiontime
+        #return a list of solution path, return a list of all paths, return executiontime, return total cost (None if unweighted)
         solution_path = self._getSolutionPath(visited, treasure_loc)
         visited_loc = self._getVisitedLocs(visited)
 
-        return visited_loc, solution_path, execution_time
+        return visited_loc, solution_path, execution_time, total_cost
