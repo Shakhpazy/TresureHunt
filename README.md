@@ -18,11 +18,11 @@ In the window, choose an algorithm from the **Algorithm** dropdown, click **Run*
 
 ## Grid generation
 
-Each run creates a fixed 10x10 map. 15 of its cells are static walls, and each map also has one start, one trap and one treasure. Select **Regenerate Grid** to generate a new map.
+Each run creates a fixed 10x10 map. 15 % of its cells are static walls, and each map also has one start, one trap and one treasure. Select **Regenerate Grid** to generate a new map.
 
 ## Algorithms
 
-Choose an algorithm from the **Algorithm** dropdown in the sidebar (click it to open the list, click a name to pick it; click elsewhere or press Esc to close it), then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
+Choose an algorithm from the **Algorithm** dropdown in the sidebar, then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
 
 All three searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS also returns its total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. None of them can step on a wall (`#`), a trap (`X`) or off the grid.
 
