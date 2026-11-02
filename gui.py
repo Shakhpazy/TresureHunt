@@ -23,11 +23,12 @@ START_TEXT_COLOR = (255, 255, 255)
 VISITED_BACKGROUND = (94, 237, 136)
 SOLUTION_PATH_BACKGROUND = (94, 237, 136)
 SOLUTION_PATH_SYMBOL_COLOR = (255,255,255)
-ALGORITHMS = ["DFS", "BFS"]
+WEIGHT_TEXT_COLOR = (0, 0, 0)
+ALGORITHMS = ["DFS", "BFS", "UCS"]
 
 class Gui:
 
-    def __init__(self, grid, on_regenerate, on_run=None, show_grid_lines=True):
+    def __init__(self, grid, on_regenerate, on_run=None, show_grid_lines=True, on_algo_change=None):
         if not grid:
             raise ValueError("2d matrix of size 8x8 or more should be inserted", grid)
 
@@ -35,8 +36,10 @@ class Gui:
         self.grid = grid
         self.on_regenerate = on_regenerate
         self.on_run = on_run
+        self.on_algo_change = on_algo_change
         self.show_grid_lines = show_grid_lines
         self.font = pygame.font.Font(None, 32)
+        self.weight_font = pygame.font.Font(None, 18)
         self.button_font = pygame.font.Font(None, 24)
         self.arrow_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_ARROW)
         self.hand_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -61,6 +64,10 @@ class Gui:
         self.current_algo_idx = 0
         self.solution_path = []
         self.visited = []
+        self.weights = None
+
+    def set_weights(self, weights):
+        self.weights = weights
 
     def set_solution_path(self, solution):
         self.solution_path = list(solution or [])
@@ -107,6 +114,20 @@ class Gui:
 
             if self.show_grid_lines:
                 pygame.draw.rect(self.screen, GRID_COLOR, rectangle, 1)
+
+    def _draw_weights(self):
+        if not self.weights:
+            return
+
+        for r, row in enumerate(self.weights):
+            for c, weight in enumerate(row):
+                if weight is None:
+                    continue
+
+                text = self.weight_font.render(f"w:{weight}", True, WEIGHT_TEXT_COLOR)
+                x = self.board_origin_x + c * CELL_SIZE + CELL_SIZE // 2
+                y = (r + 1) * CELL_SIZE - 2
+                self.screen.blit(text, text.get_rect(midbottom=(x, y)))
 
     def draw_grid(self):
         self.screen.fill(BACKGROUND_COLOR)
@@ -191,6 +212,7 @@ class Gui:
         )
 
         self._draw_visited()
+        self._draw_weights()
         pygame.display.flip()
 
     def regenerate_grid(self):
@@ -264,6 +286,8 @@ class Gui:
                     and self.selected_algo_button.collidepoint(event.pos)
                 ):
                     self._update_algorithm()
+                    if self.on_algo_change:
+                        self.on_algo_change()
                     self.draw_grid()
 
         pygame.quit()
