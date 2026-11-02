@@ -7,19 +7,18 @@ from algos.dfs import DFS
 from algos.bfs import BFS
 from gui import ALGORITHMS
 
-MIN_GRID_SIZE = 8
-MAX_GRID_SIZE = 16
+GRID_SIZE = 10
 STATIC_WALL_RATIO = 0.15
 
 
 def create_random_map():
-    size = random.randint(MIN_GRID_SIZE, MAX_GRID_SIZE)
+    size = GRID_SIZE
     static_walls = round(size * size * STATIC_WALL_RATIO)
     return TresureMap(size, static_walls).getMap()
 
 
 def run_current_algorithm():
-    current_algo = DFS()
+    current_algo = None
 
     if gui.current_algo_idx == 0:
         current_algo = DFS()
@@ -30,7 +29,7 @@ def run_current_algorithm():
     gui.set_solution_path(solution)
     gui.set_visited(visited)
     print(solution)
-    print(f"BFS took {execution_time:.6f} seconds")
+    print(f"{ALGORITHMS[gui.current_algo_idx]} took {execution_time:.6f} seconds")
     return visited, solution
 
 
