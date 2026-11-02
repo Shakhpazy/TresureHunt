@@ -6,6 +6,9 @@ TRAP = "X"
 EMPTY = ""
 START = "S"
 
+MIN_WEIGHT = 1
+MAX_WEIGHT = 99
+
 class TreasureMap:
 
 
@@ -50,4 +53,21 @@ class TreasureMap:
         return row, col
 
 
-    
+def create_weight_matrix(grid):
+    """Cost of stepping onto each cell of grid, used only by uniform cost search.
+
+    Walls and traps are None (impassable), the start is 0 (never stepped onto),
+    and empty cells and the treasure get a random weight.
+    """
+    weights = []
+    for row in grid:
+        weight_row = []
+        for cell in row:
+            if cell in (STATIC_WALLS, TRAP):
+                weight_row.append(None)
+            elif cell == START:
+                weight_row.append(0)
+            else:
+                weight_row.append(random.randint(MIN_WEIGHT, MAX_WEIGHT))
+        weights.append(weight_row)
+    return weights
