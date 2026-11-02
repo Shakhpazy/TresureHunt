@@ -26,47 +26,65 @@ Choose an algorithm from the **Algorithm** dropdown in the sidebar (click it to 
 
 All three searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS also returns its total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. None of them can step on a wall (`#`), a trap (`X`) or off the grid.
 
-The console outputs below all come from the same map (`S` start, `T` treasure, `#` wall, `X` trap):
-
-```
-. . # # . . . . . .
-. . . . T . . . . #
-# . . . # # # . . .
-# . . . # . . . . .
-. . . . . . . . . .
-. . . . S . . . . .
-. . . . . . . . . .
-# . . . . . # # . .
-X . . . . # . . . #
-. . . . . . . # . .
-```
+The screenshots and console outputs below all come from the same map: `S` (green) is the start, `T` (gold) the treasure, `#` (blue) a wall and `X` (red) the trap.
 
 ### DFS (depth-first search, `algos/dfs.py`)
 
 - It uses a stack of `(cell, parent)` pairs. A cell is marked visited when it is **popped**, not when it is pushed. The same cell can sit on the stack more than once, and a copy popped after the cell is already visited is skipped.
 - The last neighbor pushed is the first one popped, so it explores left, up, right, then down, going as deep as it can before backing up.
-- It stops when it pops the treasure. The path it returns is simply the first one it found, not the shortest: 12 steps below, where BFS needs 6.
+- It stops when it pops the treasure. The path it returns is simply the first one it found, not the shortest: 41 steps below, where BFS needs 5.
+
+![DFS run](images/DFS_SC.png)
 
 ```
 === DFS ===
 Coordinates are (row, col), counted from 0 at the top left corner.
 w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the cost so far.
-(5, 4) w:0 -> total 0
-(5, 3) w:1 -> total 1
-(5, 2) w:1 -> total 2
-(5, 1) w:1 -> total 3
-(5, 0) w:1 -> total 4
-(4, 0) w:1 -> total 5
-(4, 1) w:1 -> total 6
-(3, 1) w:1 -> total 7
-(2, 1) w:1 -> total 8
-(1, 1) w:1 -> total 9
-(1, 2) w:1 -> total 10
-(1, 3) w:1 -> total 11
-(1, 4) w:1 -> total 12
-Path cost: 12
-Nodes expanded: 16
-Runtime: 0.000013 seconds
+(6, 8) w:0 -> total 0
+(6, 7) w:1 -> total 1
+(5, 7) w:1 -> total 2
+(5, 6) w:1 -> total 3
+(5, 5) w:1 -> total 4
+(5, 4) w:1 -> total 5
+(5, 3) w:1 -> total 6
+(4, 3) w:1 -> total 7
+(4, 2) w:1 -> total 8
+(4, 1) w:1 -> total 9
+(4, 0) w:1 -> total 10
+(3, 0) w:1 -> total 11
+(2, 0) w:1 -> total 12
+(1, 0) w:1 -> total 13
+(0, 0) w:1 -> total 14
+(0, 1) w:1 -> total 15
+(1, 1) w:1 -> total 16
+(1, 2) w:1 -> total 17
+(1, 3) w:1 -> total 18
+(0, 3) w:1 -> total 19
+(0, 4) w:1 -> total 20
+(0, 5) w:1 -> total 21
+(0, 6) w:1 -> total 22
+(0, 7) w:1 -> total 23
+(0, 8) w:1 -> total 24
+(0, 9) w:1 -> total 25
+(1, 9) w:1 -> total 26
+(1, 8) w:1 -> total 27
+(1, 7) w:1 -> total 28
+(1, 6) w:1 -> total 29
+(1, 5) w:1 -> total 30
+(2, 5) w:1 -> total 31
+(3, 5) w:1 -> total 32
+(3, 4) w:1 -> total 33
+(4, 4) w:1 -> total 34
+(4, 5) w:1 -> total 35
+(4, 6) w:1 -> total 36
+(3, 6) w:1 -> total 37
+(3, 7) w:1 -> total 38
+(2, 7) w:1 -> total 39
+(2, 8) w:1 -> total 40
+(2, 9) w:1 -> total 41
+Path cost: 41
+Nodes expanded: 47
+Runtime: 0.000114 seconds
 ```
 
 ### BFS (breadth-first search, `algos/bfs.py`)
@@ -75,47 +93,45 @@ Runtime: 0.000013 seconds
 - Because a whole level is finished before the next starts, the first time it reaches the treasure is by a path with the fewest steps.
 - Nodes expanded counts each cell taken off the queue. Cells that were queued but never taken off still show green, so the green area can be a little bigger than the expanded count.
 
+![BFS run](images/BFS_SC.png)
+
 ```
 === BFS ===
 Coordinates are (row, col), counted from 0 at the top left corner.
 w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the cost so far.
-(5, 4) w:0 -> total 0
-(4, 4) w:1 -> total 1
-(4, 3) w:1 -> total 2
-(3, 3) w:1 -> total 3
-(2, 3) w:1 -> total 4
-(1, 3) w:1 -> total 5
-(1, 4) w:1 -> total 6
-Path cost: 6
-Nodes expanded: 57
-Runtime: 0.000033 seconds
+(6, 8) w:0 -> total 0
+(6, 9) w:1 -> total 1
+(5, 9) w:1 -> total 2
+(4, 9) w:1 -> total 3
+(3, 9) w:1 -> total 4
+(2, 9) w:1 -> total 5
+Path cost: 5
+Nodes expanded: 21
+Runtime: 0.000060 seconds
 ```
 
 ### UCS (uniform cost search, `algos/ucs.py`)
 
 - UCS uses step costs. Choosing UCS lays a weight matrix over the current map and draws it as `w:number` in each cell: empty cells and the treasure get a random cost from 1 to 99, the start costs 0, and traps and walls cannot be entered. Choosing UCS again in the dropdown, or clicking **Regenerate Grid** while UCS is selected, creates new weights. DFS and BFS never see the weights.
 - It uses a priority queue (min-heap) ordered by the cost so far, then row, then column. A cell is marked visited when it is **popped**, because the first time a cell is popped it was reached by its cheapest route. Later, more expensive copies are skipped.
-- It returns the cheapest path, which is not always the one with the fewest steps: below it takes 10 steps for a cost of 269, while BFS's 6-step path would cost 340 with these weights.
+- It returns the cheapest path, which is not always the one with the fewest steps. Below, UCS and BFS both take 5 steps, but UCS's route costs 208 while BFS's route (straight up the right edge) would cost 283 with these weights. When a cheaper route is longer, UCS takes it; the UCS unit tests cover that case.
 - It checks its weights before searching and raises a `ValueError` if they do not match the grid, if a weight below 1 is found (the start is the only 0), or if a wall or trap has a weight.
+
+![UCS run](images/UCS_SC.png)
 
 ```
 === UCS ===
 Coordinates are (row, col), counted from 0 at the top left corner.
 w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the cost so far.
-(5, 4) w:0 -> total 0
-(6, 4) w:23 -> total 23
-(6, 3) w:19 -> total 42
-(6, 2) w:2 -> total 44
-(5, 2) w:27 -> total 71
-(4, 2) w:7 -> total 78
-(3, 2) w:4 -> total 82
-(2, 2) w:45 -> total 127
-(2, 3) w:34 -> total 161
-(1, 3) w:11 -> total 172
-(1, 4) w:97 -> total 269
-Path cost: 269
-Nodes expanded: 60
-Runtime: 0.000056 seconds
+(6, 8) w:0 -> total 0
+(5, 8) w:52 -> total 52
+(4, 8) w:54 -> total 106
+(3, 8) w:39 -> total 145
+(2, 8) w:28 -> total 173
+(2, 9) w:35 -> total 208
+Path cost: 208
+Nodes expanded: 20
+Runtime: 0.000082 seconds
 ```
 
 ### Reading the output
