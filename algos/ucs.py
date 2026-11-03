@@ -9,8 +9,13 @@ class UCS(SearchAlgorith):
     DIRECTIONS = [[1,0],[0,1],[-1,0],[0,-1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def __init__(self, weights):
+    def __init__(self, weights, unusual_costs=False):
+        # unusual_costs is for special test cases: traps can be walked through
+        # (they need a weight like any open cell) and the start cell's own weight
+        # counts toward the total instead of having to be 0
         self.weights = weights
+        self.unusual_costs = unusual_costs
+        self.avoid = {STATIC_WALLS} if unusual_costs else self.AVOID
 
     def _validate(self, grid, startr, startc):
         if len(self.weights) != len(grid) or any(len(w) != len(g) for w, g in zip(self.weights, grid)):
@@ -21,9 +26,9 @@ class UCS(SearchAlgorith):
                 weight = self.weights[r][c]
 
                 # a mismatch here means the weights belong to a different map
-                if (grid[r][c] in self.AVOID) != (weight is None):
+                if (grid[r][c] in self.avoid) != (weight is None):
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
-                if grid[r][c] == START:
+                if grid[r][c] == START and not self.unusual_costs:
                     if weight != 0:
                         raise ValueError(f"The start cell must cost 0, got {weight}.")
                 elif weight is not None and weight < 1:
@@ -39,7 +44,8 @@ class UCS(SearchAlgorith):
 
         # each entry is (total cost so far, row, col, parent); a cell is only
         # marked seen when popped, since a cheaper route can still reach it
-        priority_que = [(0, startr, startc, (-1, -1))]
+        start_cost = self.weights[startr][startc] if self.unusual_costs else 0
+        priority_que = [(start_cost, startr, startc, (-1, -1))]
         seen = {}
         treasure_loc = ()
         total_cost = None
@@ -62,7 +68,7 @@ class UCS(SearchAlgorith):
                 next_r, next_c = current_r + dr, current_c + dc
                 if (0 <= next_r < n and 0 <= next_c < m and
                     (next_r, next_c) not in seen and
-                    grid[next_r][next_c] not in self.AVOID):
+                    grid[next_r][next_c] not in self.avoid):
 
                     heapq.heappush(priority_que,
                                    (cost + self.weights[next_r][next_c], next_r, next_c, (current_r, current_c)))

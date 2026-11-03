@@ -58,3 +58,45 @@ def test_ucs_rejects_weights_that_do_not_match_the_grid():
 
     with pytest.raises(ValueError, match="do not match the grid"):
         UCS(weights).search(grid, 0, 0)
+
+
+def test_ucs_by_default_rejects_a_passable_trap_or_a_start_that_costs_something():
+    grid = make_grid("SXT")
+    with pytest.raises(ValueError):
+        run_search(UCS([[0, 6, 1]]), grid)
+    with pytest.raises(ValueError):
+        run_search(UCS([[1, None, 1]]), make_grid("SXT"))
+
+
+def test_ucs_unusual_costs_walks_through_a_trap_when_it_is_cheaper():
+    # the detour along the bottom row costs 50 per cell, so the trap (6) is the cheaper way across
+    grid = make_grid(
+        "SXT",
+        "...",
+    )
+    weights = [
+        [1, 6, 1],
+        [50, 50, 50],
+    ]
+
+    result = run_search(UCS(weights, unusual_costs=True), grid)
+
+    assert result.path == [(0, 0), (0, 1), (0, 2)]
+    # the start's own cost (1) counts: 1 + 6 + 1
+    assert result.total_cost == 8
+
+
+def test_ucs_unusual_costs_goes_around_a_trap_when_the_detour_is_cheaper():
+    grid = make_grid(
+        "SXT",
+        "...",
+    )
+    weights = [
+        [1, 6, 1],
+        [1, 1, 1],
+    ]
+
+    result = run_search(UCS(weights, unusual_costs=True), grid)
+
+    assert result.path == [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2)]
+    assert result.total_cost == 5
