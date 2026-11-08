@@ -11,7 +11,7 @@ from report import format_run_report
 from gui import ALGORITHMS
 from custom_grids import load_custom_grids
 
-GRID_SIZE = 20
+GRID_SIZE = 30
 STATIC_WALL_RATIO = 0.15
 
 # only exists while a weighted algorithm is selected
