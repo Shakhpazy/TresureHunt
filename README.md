@@ -20,6 +20,8 @@ In the window, choose an algorithm from the **Algorithm** dropdown, click **Run*
 
 Each run creates a fixed 10x10 map. 15 % of its cells are static walls, and each map also has one start, one trap and one treasure. Select **Regenerate Grid** to generate a new map.
 
+Use the **Custom Grid** dropdown to load either of the two hand-made maps in `custom_grids/`. Each JSON file has a display name and ten rows using `S` for the start, `T` for treasure, `X` for a trap, `#` for a wall, and `.` for an empty cell.
+
 ## Algorithms
 
 Choose an algorithm from the **Algorithm** dropdown in the sidebar, then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
