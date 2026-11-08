@@ -248,7 +248,7 @@ class Gui:
         pygame.event.pump()
         return False
 
-    def _animate_cells(self, cells, background, with_symbol):
+    def _animate_cells(self, cells, background, with_symbol,waittime = 50):
         for r, c in cells:
             if not (0 <= r < len(self.grid) and 0 <= c < len(self.grid[0])):
                 continue
@@ -268,12 +268,11 @@ class Gui:
                 if self._animation_interrupted():
                     self.skip_animation = True
                 else:
-                    pygame.time.wait(50)
+                    pygame.time.wait(waittime)
 
     def _draw_visited(self):
         self.skip_animation = not self.animate_pending
         self.animate_pending = False
-
         self._animate_cells(self.visited, VISITED_BACKGROUND, False)
         self._animate_cells(self.solution_path, SOLUTION_PATH_BACKGROUND, True)
 
@@ -287,7 +286,7 @@ class Gui:
 
         total_cost, nodes_expanded, execution_time = self.info
         lines = [
-            f"Total cost: {total_cost}",
+            f"Path cost: {total_cost}",
             f"Nodes expanded: {nodes_expanded}",
             f"Time: {execution_time:.4f}s",
         ]
@@ -416,8 +415,16 @@ class Gui:
 
     def run_algorithm(self):
         if self.on_run:
+            self._clear_results()
+            self.draw_grid()
             self.on_run()
             self.draw_grid()
+
+    def _clear_results(self):
+        self.visited = []
+        self.solution_path = []
+        self.info = None
+        self.animate_pending = False
 
     def run(self):
         running = True
@@ -476,6 +483,7 @@ class Gui:
                     and event.button == 1
                     and self.run_button.collidepoint(event.pos)
                 ):
+                    self.reset_overlay()
                     self.run_algorithm()
                 elif (
                     event.type == pygame.MOUSEBUTTONDOWN

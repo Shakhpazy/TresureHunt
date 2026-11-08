@@ -68,7 +68,11 @@ def run_current_algorithm():
     visited, solution, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
     gui.set_solution_path(solution)
     gui.set_visited(visited)
-    gui.show_info(total_cost,nodes_expanded,execution_time)
+
+    if total_cost is None: #Quick Fix
+        total_cost = len(solution) - 1 if solution else 0
+    gui.show_info(total_cost, nodes_expanded, execution_time)
+
     print(format_run_report(
         algo_name, solution, nodes_expanded, execution_time, total_cost,
         weights if algo_name in ("UCS", "A*") else None,
