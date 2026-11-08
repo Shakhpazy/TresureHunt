@@ -8,12 +8,14 @@ from algos.bfs import BFS
 from algos.ucs import UCS
 from report import format_run_report
 from gui import ALGORITHMS
+from custom_grids import load_custom_grids
 
 GRID_SIZE = 10
 STATIC_WALL_RATIO = 0.15
 
 # only exists while UCS is the selected algorithm
 weights = None
+custom_grids = load_custom_grids()
 
 
 def create_random_map():
@@ -72,8 +74,22 @@ def algorithm_changed():
         gui.set_solution_path([])
 
 
+def select_custom_grid(index):
+    new_grid = custom_grids[index][1]
+    agent.setGrid(new_grid)
+    refresh_weights()
+    return new_grid
+
+
 grid = create_random_map()
 agent = Agent(grid)
-gui = Gui(grid, regenerate_map, run_current_algorithm, on_algo_change=algorithm_changed)
+gui = Gui(
+    grid,
+    regenerate_map,
+    run_current_algorithm,
+    on_algo_change=algorithm_changed,
+    custom_grid_names=[name for name, _ in custom_grids],
+    on_custom_grid=select_custom_grid,
+)
 
 gui.run()
