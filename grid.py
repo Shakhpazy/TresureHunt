@@ -31,7 +31,7 @@ class TreasureMap:
 
         self.placeItem(my_map, self.staticWalls, STATIC_WALLS)
         self.placeItem(my_map, 1, TREASURE)
-        self.placeItem(my_map, 20, TRAP)
+        self.placeItem(my_map, 1, TRAP)
         self.placeItem(my_map, 1, START)
 
         return my_map
