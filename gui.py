@@ -68,6 +68,9 @@ class Gui:
         self.solution_path = []
         self.visited = []
         self.weights = None
+        self.info = None
+        self.animate_pending = False
+        self.skip_animation = False
 
     def _layout_buttons(self):
         button_x = self.screen.get_width() - BUTTON_WIDTH - 20
@@ -85,9 +88,11 @@ class Gui:
 
     def set_solution_path(self, solution):
         self.solution_path = list(solution or [])
+        self.animate_pending = bool(self.solution_path)
 
     def set_visited(self, visited):
         self.visited = list(visited or [])
+        self.animate_pending = bool(self.visited)
 
     def get_screen_size(self):
         return (
@@ -227,34 +232,73 @@ class Gui:
             option_text = self.button_font.render(self.custom_grid_names[idx], True, BUTTON_TEXT_COLOR)
             self.screen.blit(option_text, option_text.get_rect(midleft=(rect.x + 10, rect.centery)))
 
-    def _draw_visited(self):
-        path_set = set(self.solution_path)
+    def _cell_rect(self, r, c):
+        return pygame.Rect(
+            self.board_origin_x + c * CELL_SIZE,
+            r * CELL_SIZE,
+            CELL_SIZE,
+            CELL_SIZE,
+        )
 
-        for r, c in self.visited:
-            if r < 0 or c < 0:
+    def _animation_interrupted(self):
+        for event in pygame.event.get([pygame.QUIT, pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]):
+            if event.type == pygame.QUIT:
+                pygame.event.post(event)
+            return True
+        pygame.event.pump()
+        return False
+
+    def _animate_cells(self, cells, background, with_symbol):
+        for r, c in cells:
+            if not (0 <= r < len(self.grid) and 0 <= c < len(self.grid[0])):
                 continue
-            if r >= len(self.grid) or c >= len(self.grid[0]):
+            if self.grid[r][c] in (START, TREASURE):
                 continue
 
-            cell = self.grid[r][c]
-            if cell in (START, TREASURE):
-                continue
+            rect = self._cell_rect(r, c)
+            pygame.draw.rect(self.screen, background, rect)
 
-            rectangle = pygame.Rect(
-                self.board_origin_x + c * CELL_SIZE,
-                r * CELL_SIZE,
-                CELL_SIZE,
-                CELL_SIZE,
-            )
-
-            if (r, c) in path_set:
-                pygame.draw.rect(self.screen, SOLUTION_PATH_BACKGROUND, rectangle)
-                pygame.draw.circle(self.screen, SOLUTION_PATH_SYMBOL_COLOR, rectangle.center, CELL_SIZE // 6)
-            else:
-                pygame.draw.rect(self.screen, VISITED_BACKGROUND, rectangle)
-
+            if with_symbol:
+                pygame.draw.circle(self.screen, SOLUTION_PATH_SYMBOL_COLOR, rect.center, CELL_SIZE // 6)
             if self.show_grid_lines:
-                pygame.draw.rect(self.screen, GRID_COLOR, rectangle, 1)
+                pygame.draw.rect(self.screen, GRID_COLOR, rect, 1)
+
+            if not self.skip_animation:
+                pygame.display.update(rect)
+                if self._animation_interrupted():
+                    self.skip_animation = True
+                else:
+                    pygame.time.wait(50)
+
+    def _draw_visited(self):
+        self.skip_animation = not self.animate_pending
+        self.animate_pending = False
+
+        self._animate_cells(self.visited, VISITED_BACKGROUND, False)
+        self._animate_cells(self.solution_path, SOLUTION_PATH_BACKGROUND, True)
+
+
+    def show_info(self, total_cost, nodes_expanded, execution_time):
+        self.info = (total_cost, nodes_expanded, execution_time)
+
+    def _draw_info(self):
+        if not self.info:
+            return
+
+        total_cost, nodes_expanded, execution_time = self.info
+        lines = [
+            f"Total cost: {total_cost}",
+            f"Nodes expanded: {nodes_expanded}",
+            f"Time: {execution_time:.4f}s",
+        ]
+
+        x = self.selected_algo_button.x
+        y = self.selected_algo_button.bottom + 20
+        for line in lines:
+            surface = self.button_font.render(line, True, BUTTON_TEXT_COLOR)
+            self.screen.blit(surface, (x, y))
+            y += surface.get_height() + 6
+
 
     def _draw_weights(self):
         if not self.weights:
@@ -350,6 +394,7 @@ class Gui:
 
         self._draw_visited()
         self._draw_weights()
+        self._draw_info()
         self._draw_dropdown()
         self._draw_custom_grid_dropdown()
         pygame.display.flip()

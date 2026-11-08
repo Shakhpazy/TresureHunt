@@ -68,6 +68,7 @@ def run_current_algorithm():
     visited, solution, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
     gui.set_solution_path(solution)
     gui.set_visited(visited)
+    gui.show_info(total_cost,nodes_expanded,execution_time)
     print(format_run_report(
         algo_name, solution, nodes_expanded, execution_time, total_cost,
         weights if algo_name in ("UCS", "A*") else None,
@@ -96,7 +97,6 @@ def select_custom_grid(index):
     refresh_weights()
     return new_grid
 
-
 grid = create_random_map()
 agent = Agent(grid)
 gui = Gui(
@@ -107,5 +107,6 @@ gui = Gui(
     custom_grid_names=[name for name, _ in custom_grids],
     on_custom_grid=select_custom_grid,
 )
+
 
 gui.run()
