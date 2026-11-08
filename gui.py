@@ -112,6 +112,8 @@ class Gui:
             return
 
         self.current_algo_idx = idx
+        self.visited = []
+        self.solution_path = []
         if self.on_algo_change:
             self.on_algo_change()
 
