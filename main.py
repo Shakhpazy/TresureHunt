@@ -1,19 +1,20 @@
 import random
 
-from grid import TreasureMap, create_weight_matrix
+from grid import TREASURE, TreasureMap, create_weight_matrix
 from gui import Gui
 from agents import Agent
 from algos.dfs import DFS
 from algos.bfs import BFS
 from algos.ucs import UCS
+from algos.astar import ASTAR
 from report import format_run_report
 from gui import ALGORITHMS
 from custom_grids import load_custom_grids
 
-GRID_SIZE = 10
+GRID_SIZE = 20
 STATIC_WALL_RATIO = 0.15
 
-# only exists while UCS is the selected algorithm
+# only exists while a weighted algorithm is selected
 weights = None
 custom_grids = load_custom_grids()
 
@@ -25,10 +26,10 @@ def create_random_map():
 
 
 def refresh_weights():
-    # UCS gets a fresh weight matrix over the current map, the other searches don't use one
+    # UCS and A* get a fresh weight matrix; DFS and BFS do not use one.
     global weights
 
-    if ALGORITHMS[gui.current_algo_idx] == "UCS":
+    if ALGORITHMS[gui.current_algo_idx] in ("UCS", "A*"):
         weights = create_weight_matrix(agent.grid)
     else:
         weights = None
@@ -46,6 +47,21 @@ def run_current_algorithm():
         if weights is None:
             refresh_weights()
         current_algo = UCS(weights)
+    elif algo_name == "A*":
+        if weights is None:
+            refresh_weights()
+        treasure_row, treasure_col = next(
+            (r, c)
+            for r, row in enumerate(agent.grid)
+            for c, cell in enumerate(row)
+            if cell == TREASURE
+        )
+        current_algo = ASTAR(
+            weights,
+            unusual_costs=True,
+            treasure_loc_row=treasure_row,
+            treasure_loc_col=treasure_col,
+        )
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
@@ -54,7 +70,7 @@ def run_current_algorithm():
     gui.set_visited(visited)
     print(format_run_report(
         algo_name, solution, nodes_expanded, execution_time, total_cost,
-        weights if algo_name == "UCS" else None,
+        weights if algo_name in ("UCS", "A*") else None,
     ))
     return visited, solution
 

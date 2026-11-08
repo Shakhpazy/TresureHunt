@@ -60,12 +60,19 @@ def test_ucs_rejects_weights_that_do_not_match_the_grid():
         UCS(weights).search(grid, 0, 0)
 
 
-def test_ucs_by_default_rejects_a_passable_trap_or_a_start_that_costs_something():
+def test_ucs_with_unusual_costs_false_does_not_walk_through_a_trap():
     grid = make_grid("SXT")
+    result = run_search(UCS([[0, 6, 1]], unusual_costs=False), grid)
+
+    assert result.path == []
+
+
+def test_ucs_rejects_a_wrong_trap_cost_or_start_cost():
+    grid = make_grid("SXT")
+    with pytest.raises(ValueError, match="must be 6"):
+        run_search(UCS([[0, 5, 1]], unusual_costs=False), grid)
     with pytest.raises(ValueError):
-        run_search(UCS([[0, 6, 1]]), grid)
-    with pytest.raises(ValueError):
-        run_search(UCS([[1, None, 1]]), make_grid("SXT"))
+        run_search(UCS([[1, 6, 1]], unusual_costs=False), grid)
 
 
 def test_ucs_unusual_costs_walks_through_a_trap_when_it_is_cheaper():

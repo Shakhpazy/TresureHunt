@@ -26,7 +26,7 @@ Use the **Custom Grid** dropdown to load either of the two hand-made maps in `cu
 
 Choose an algorithm from the **Algorithm** dropdown in the sidebar, then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
 
-All three searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS also returns its total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. None of them can step on a wall (`#`), a trap (`X`) or off the grid.
+All four searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS and A* also return their total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. Searches cannot step on a wall (`#`) or off the grid. UCS and A* may enter a trap at its fixed cost of 6 when `unusual_costs=True`; setting it to `False` blocks traps.
 
 The screenshots and console outputs below all come from the same map: `S` (green) is the start, `T` (gold) the treasure, `#` (blue) a wall and `X` (red) the trap.
 
@@ -114,7 +114,7 @@ Runtime: 0.000060 seconds
 
 ### UCS (uniform cost search, `algos/ucs.py`)
 
-- UCS uses step costs. Choosing UCS lays a weight matrix over the current map and draws it as `w:number` in each cell: empty cells and the treasure get a random cost from 1 to 99, the start costs 0, and traps and walls cannot be entered. Choosing UCS again in the dropdown, or clicking **Regenerate Grid** while UCS is selected, creates new weights. DFS and BFS never see the weights.
+- UCS uses step costs. Choosing UCS lays a weight matrix over the current map and draws it as `w:number` in each cell: empty cells and the treasure get a random cost from 1 to 99, the start costs 0, traps cost 6, and walls have no cost. `unusual_costs=True` permits entering traps and `False` blocks them. Choosing UCS again in the dropdown, or clicking **Regenerate Grid** while UCS is selected, creates new weights. DFS and BFS never see the weights.
 - It uses a priority queue (min-heap) ordered by the cost so far, then row, then column. A cell is marked visited when it is **popped**, because the first time a cell is popped it was reached by its cheapest route. Later, more expensive copies are skipped.
 - It returns the cheapest path, which is not always the one with the fewest steps. Below, UCS and BFS both take 5 steps, but UCS's route costs 208 while BFS's route (straight up the right edge) would cost 283 with these weights. When a cheaper route is longer, UCS takes it; the UCS unit tests cover that case.
 - It checks its weights before searching and raises a `ValueError` if they do not match the grid, if a weight below 1 is found (the start is the only 0), or if a wall or trap has a weight.
