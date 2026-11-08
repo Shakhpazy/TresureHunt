@@ -8,13 +8,12 @@ START = "S"
 
 MIN_WEIGHT = 1
 MAX_WEIGHT = 99
+TRAP_COST = 6
 
 class TreasureMap:
 
 
     def __init__(self, size, staticWalls=1):
-        if size != 10:
-            raise ValueError(size, "Size must always be 10*10")
         if staticWalls < 1 :
             raise ValueError(staticWalls, "Walls must be greater than 1")
         if staticWalls > size * size - 2:
@@ -54,17 +53,19 @@ class TreasureMap:
 
 
 def create_weight_matrix(grid):
-    """Cost of stepping onto each cell of grid, used only by uniform cost search.
+    """Cost of stepping onto each cell for weighted searches.
 
-    Walls and traps are None (impassable), the start is 0 (never stepped onto),
-    and empty cells and the treasure get a random weight.
+    Walls are None, traps cost 6, the start is 0, and empty cells and the
+    treasure get a random weight.
     """
     weights = []
     for row in grid:
         weight_row = []
         for cell in row:
-            if cell in (STATIC_WALLS, TRAP):
+            if cell == STATIC_WALLS:
                 weight_row.append(None)
+            elif cell == TRAP:
+                weight_row.append(TRAP_COST)
             elif cell == START:
                 weight_row.append(0)
             else:

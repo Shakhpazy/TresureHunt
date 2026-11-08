@@ -22,7 +22,7 @@ GRID_SIZE = 10
 #     (4, 2),
 # ]
 # START_COST = 1           # UCS only: the start cell's own cost (normally 0)
-# TRAP_COST = 6            # UCS only: every trap can be walked through at this cost
+# Trap cost is fixed at 6 in grid.py.
 
 
 START_POS = (0, 0)       # (row, col), counted from 0 at the top left
@@ -42,8 +42,6 @@ WALL_POSITIONS = [       # 5 walls, each (row, col). PLACEHOLDERS: replace with 
     (8, 8)
 ]
 START_COST = 1           # UCS only: the start cell's own cost (normally 0)
-TRAP_COST = 6   
-
 # -----------------------------------------------------------------------------
 
 
@@ -76,13 +74,9 @@ def build_custom_grid(start, traps, treasure, walls, size=GRID_SIZE):
 
 
 def build_custom_weights(grid, start):
-    """Random weights for open cells, but the start costs START_COST and every trap TRAP_COST."""
+    """Random weights with the custom start cost; traps already cost 6."""
     weights = create_weight_matrix(grid)
     weights[start[0]][start[1]] = START_COST
-    for r, row in enumerate(grid):
-        for c, cell in enumerate(row):
-            if cell == TRAP:
-                weights[r][c] = TRAP_COST
     return weights
 
 
@@ -92,15 +86,16 @@ def main():
     from algos.bfs import BFS
     from algos.dfs import DFS
     from algos.ucs import UCS
+    from algos.astar import ASTAR
     from gui import ALGORITHMS, Gui
     from report import format_run_report
 
     grid = build_custom_grid(START_POS, TRAP_POSITIONS, TREASURE_POS, WALL_POSITIONS)
     agent = Agent(grid)
-    state = {"weights": None}  # only exists while UCS is the selected algorithm
+    state = {"weights": None}  # only exists while UCS or A* is selected
 
     def refresh_weights():
-        if ALGORITHMS[gui.current_algo_idx] == "UCS":
+        if ALGORITHMS[gui.current_algo_idx] in ("UCS", "A*"):
             state["weights"] = build_custom_weights(grid, START_POS)
         else:
             state["weights"] = None
@@ -116,6 +111,15 @@ def main():
             if state["weights"] is None:
                 refresh_weights()
             algo = UCS(state["weights"], unusual_costs=True)
+        elif algo_name == "A*":
+            if state["weights"] is None:
+                refresh_weights()
+            algo = ASTAR(
+                state["weights"],
+                unusual_costs=True,
+                treasure_loc_row=TREASURE_POS[0],
+                treasure_loc_col=TREASURE_POS[1],
+            )
         else:
             raise ValueError(f"Unknown algorithm: {algo_name}")
 
@@ -124,7 +128,7 @@ def main():
         gui.set_visited(visited)
         print(format_run_report(
             algo_name, solution, expanded, seconds, cost,
-            state["weights"] if algo_name == "UCS" else None,
+            state["weights"] if algo_name in ("UCS", "A*") else None,
         ))
 
     def regenerate():

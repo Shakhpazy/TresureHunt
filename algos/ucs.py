@@ -1,6 +1,6 @@
 import heapq
 from algos.search_algo import SearchAlgorith
-from grid import STATIC_WALLS, TREASURE, TRAP, START
+from grid import STATIC_WALLS, TREASURE, TRAP, START, TRAP_COST
 
 
 class UCS(SearchAlgorith):
@@ -9,7 +9,7 @@ class UCS(SearchAlgorith):
     DIRECTIONS = [[1,0],[0,1],[-1,0],[0,-1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def __init__(self, weights, unusual_costs=False):
+    def __init__(self, weights, unusual_costs=True):
         # unusual_costs is for special test cases: traps can be walked through
         # (they need a weight like any open cell) and the start cell's own weight
         # counts toward the total instead of having to be 0
@@ -25,12 +25,19 @@ class UCS(SearchAlgorith):
             for c in range(len(grid[0])):
                 weight = self.weights[r][c]
 
-                # a mismatch here means the weights belong to a different map
-                if (grid[r][c] in self.avoid) != (weight is None):
+                # Walls never have a cost. Traps always have their fixed cost,
+                # even when this search is configured not to enter them.
+                if grid[r][c] == STATIC_WALLS and weight is not None:
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
-                if grid[r][c] == START and not self.unusual_costs:
-                    if weight != 0:
+                if grid[r][c] == TRAP and weight != TRAP_COST:
+                    raise ValueError(f"Trap weight at {(r, c)} must be {TRAP_COST}.")
+                if grid[r][c] not in (STATIC_WALLS, TRAP) and weight is None:
+                    raise ValueError(f"Weights do not match the grid at {(r, c)}.")
+                if grid[r][c] == START:
+                    if not self.unusual_costs and weight != 0:
                         raise ValueError(f"The start cell must cost 0, got {weight}.")
+                    if self.unusual_costs and weight < 0:
+                        raise ValueError(f"The start cell cannot have a negative cost, got {weight}.")
                 elif weight is not None and weight < 1:
                     raise ValueError(f"Weight at {(r, c)} must be at least 1, got {weight}.")
 
