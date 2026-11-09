@@ -324,7 +324,7 @@ class Gui:
                 if weight is None:
                     continue
 
-                text = self.weight_font.render(f"w:{weight}", True, WEIGHT_TEXT_COLOR)
+                text = self.weight_font.render(str(weight), True, WEIGHT_TEXT_COLOR)
                 x = self.board_origin_x + c * CELL_SIZE + CELL_SIZE // 2
                 y = (r + 1) * CELL_SIZE - 2
                 self.screen.blit(text, text.get_rect(midbottom=(x, y)))

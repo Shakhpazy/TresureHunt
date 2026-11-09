@@ -10,31 +10,23 @@ class ASTAR(SearchAlgorith):
     DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def __init__(
-        self,
-        weights=None,
-        unusual_costs=True,
-        treasure_loc_row=-1,
-        treasure_loc_col=-1,
-    ):
-        if treasure_loc_row < 0 or treasure_loc_col < 0:
-            raise ValueError("Treasure location must be provided for A* search.")
-
+    def __init__(self, weights=None, unusual_costs=True):
         self.weights = weights
-        self.treasure_loc_row = treasure_loc_row
-        self.treasure_loc_col = treasure_loc_col
+        # filled in by search(): every treasure cell on the grid it is given
+        self.treasures = []
         self.unusual_costs = unusual_costs
         self.avoid = {STATIC_WALLS} if unusual_costs else self.AVOID
 
     def _validate(self, grid, startr, startc):
         rows = len(grid)
         cols = len(grid[0])
-        treasure = (self.treasure_loc_row, self.treasure_loc_col)
 
-        if not (0 <= treasure[0] < rows and 0 <= treasure[1] < cols):
-            raise ValueError("Treasure location is outside the grid.")
-        if grid[treasure[0]][treasure[1]] != TREASURE:
-            raise ValueError(f"No treasure at {treasure}.")
+        # the grid is the only source of truth for where the treasures are
+        self.treasures = [
+            (r, c) for r in range(rows) for c in range(cols) if grid[r][c] == TREASURE
+        ]
+        if not self.treasures:
+            raise ValueError("No treasure on the grid.")
         if grid[startr][startc] != START:
             raise ValueError(f"No start cell at {(startr, startc)}.")
 
@@ -63,7 +55,9 @@ class ASTAR(SearchAlgorith):
                     raise ValueError(f"Weight at {(r, c)} must be at least 1.")
 
     def _heuristic(self, row, col):
-        return abs(row - self.treasure_loc_row) + abs(col - self.treasure_loc_col)
+        # distance to the NEAREST treasure: never overestimates the cost to
+        # the closest goal, and is 0 on every treasure cell
+        return min(abs(row - r) + abs(col - c) for r, c in self.treasures)
 
     def _step_cost(self, grid, row, col):
         if grid[row][col] == TRAP:

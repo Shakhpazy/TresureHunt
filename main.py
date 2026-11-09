@@ -1,6 +1,6 @@
 import random
 
-from grid import TREASURE, TreasureMap, create_weight_matrix
+from grid import TreasureMap, create_weight_matrix
 from gui import Gui
 from agents import Agent
 from algos.dfs import DFS
@@ -50,18 +50,7 @@ def run_current_algorithm():
     elif algo_name == "A*":
         if weights is None:
             refresh_weights()
-        treasure_row, treasure_col = next(
-            (r, c)
-            for r, row in enumerate(agent.grid)
-            for c, cell in enumerate(row)
-            if cell == TREASURE
-        )
-        current_algo = ASTAR(
-            weights,
-            unusual_costs=True,
-            treasure_loc_row=treasure_row,
-            treasure_loc_col=treasure_col,
-        )
+        current_algo = ASTAR(weights, unusual_costs=True)
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
