@@ -119,7 +119,7 @@ class Gui:
         # the list opens below the header, or above it when there is no room
         list_height = len(ALGORITHMS) * BUTTON_HEIGHT
         top = self.selected_algo_button.bottom
-        if self.custom_grid_names or top + list_height > self.screen.get_height():
+        if top + list_height > self.screen.get_height():
             top = self.selected_algo_button.top - list_height
 
         return [
