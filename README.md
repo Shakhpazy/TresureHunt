@@ -151,6 +151,7 @@ Runtime: 0.000082 seconds
 - It uses a priority queue ordered by `f = g + h`, where `g` is the cost so far and `h` is a guess of the cost still to go. **On the random map every step costs 1, so `g` is just the number of steps and there are no weights to show.** On custom grids it keeps the weight matrix described above (every open cell 1, passable traps 6), as before.
 - The map has several treasures, so `h` is the Manhattan distance (rows plus columns) to the **nearest** treasure. A* finds the treasures by scanning the grid it is given, so it cannot disagree with the map. That `h` never overestimates the cost to the closest treasure and is 0 on every treasure, so A* returns a shortest path, the same length as BFS, with fewer expanded cells: on 1997 solvable random 20x20 maps it expanded fewer cells than BFS on 1981 and never more, averaging 22 against BFS's 85.
 - It stops when it pops a treasure. It raises a `ValueError` if the grid has no treasure, and when it is given weights it validates them with the same rules as UCS.
+- It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
 - The tests include 150 seeded random maps per trap mode (blocked and passable) with three treasures, where A* given the same random weights must match UCS's cost.
 
 Console output for an 8x4 map with a treasure at the top left (cost 5) and another at the bottom right (farther away); with every open cell costing 1:
@@ -165,9 +166,24 @@ w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the c
 (0, 2) w:1 -> total 3
 (0, 1) w:1 -> total 4
 (0, 0) w:1 -> total 5
+h of each expanded cell, in the order they were expanded:
+h(2, 3) = 5
+h(2, 2) = 4
+h(2, 4) = 4
+h(1, 2) = 3
+h(2, 1) = 3
+h(2, 5) = 3
+h(3, 4) = 3
+h(0, 2) = 2
+h(2, 0) = 2
+h(3, 5) = 2
+h(0, 1) = 1
+h(1, 0) = 1
+h(0, 0) = 0
+Heuristic values: 33
 Path cost: 5
 Nodes expanded: 13
-Runtime: 0.000037 seconds
+Runtime: 0.000034 seconds
 ```
 
 ### GBFS (greedy best-first search, `algos/gbfs.py`)
@@ -177,31 +193,52 @@ Runtime: 0.000037 seconds
 - A cell is marked when it is first queued (like BFS), which is also when its parent is recorded. It stops when it pops a treasure, and treats walls and traps as impassable. It raises a `ValueError` if the grid has no treasure or no start.
 - It is fast but **not optimal**. On 1997 solvable random 20x20 maps it expanded 11 cells on average (BFS: 85), but its path was longer than BFS's on 335 of them (17 %), by 2.7 extra steps on average and up to 14. It finds a path exactly when BFS does, since it never revisits a cell.
 - It uses no weights, so a step costs 1 and the path cost is the number of steps.
+- It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
 
-On this 6x5 map `T` sits right under a pair of walls, so greedy marches toward it, runs into the pocket above it, and has to come back around; BFS goes straight around the walls. Walls are `..#S..` / `......` / `......` / `....##` / `.....T`.
+On this 6x5 map `T` sits right under a pair of walls, so greedy marches toward it, runs into the pocket above it, and has to come back around, while BFS goes straight around the walls. The map is `..#S..` / `......` / `......` / `....##` / `.....T`.
 
 ```
-=== GBFS ===                                      === BFS ===
-(0, 3) w:0 -> total 0                             (0, 3) w:0 -> total 0
-(0, 4) w:1 -> total 1                             (1, 3) w:1 -> total 1
-(0, 5) w:1 -> total 2                             (2, 3) w:1 -> total 2
-(1, 5) w:1 -> total 3                             (3, 3) w:1 -> total 3
-(2, 5) w:1 -> total 4                             (4, 3) w:1 -> total 4
-(2, 4) w:1 -> total 5                             (4, 4) w:1 -> total 5
-(2, 3) w:1 -> total 6                             (4, 5) w:1 -> total 6
-(3, 3) w:1 -> total 7                             Path cost: 6
-(4, 3) w:1 -> total 8                             Nodes expanded: 24
+=== GBFS ===
+Coordinates are (row, col), counted from 0 at the top left corner.
+w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the cost so far.
+(0, 3) w:0 -> total 0
+(0, 4) w:1 -> total 1
+(0, 5) w:1 -> total 2
+(1, 5) w:1 -> total 3
+(2, 5) w:1 -> total 4
+(2, 4) w:1 -> total 5
+(2, 3) w:1 -> total 6
+(3, 3) w:1 -> total 7
+(4, 3) w:1 -> total 8
 (4, 4) w:1 -> total 9
 (4, 5) w:1 -> total 10
+h of each expanded cell, in the order they were expanded:
+h(0, 3) = 6
+h(0, 4) = 5
+h(0, 5) = 4
+h(1, 5) = 3
+h(2, 5) = 2
+h(2, 4) = 3
+h(1, 4) = 4
+h(2, 3) = 4
+h(3, 3) = 3
+h(4, 3) = 2
+h(4, 4) = 1
+h(4, 5) = 0
+Heuristic values: 37
 Path cost: 10
 Nodes expanded: 12
+Runtime: 0.000019 seconds
 ```
+
+BFS on the same map takes 6 steps (path cost 6) but expands 24 cells.
 
 ### Reading the output
 
 - Each path line is one cell: its `(row, col)`, the cost of stepping onto it, and the cost so far. The start costs 0, and DFS and BFS charge 1 per step.
 - **Path cost** is the total cost of the path (`n/a` when the treasure cannot be reached, which also prints `No path to the treasure`).
 - **Nodes expanded** is how many cells the search took off its frontier and expanded, counting the treasure cell when it is reached. It is not the same as the path length.
+- **Heuristic values** (A* and GBFS only): the console lists `h` for every cell the search expanded, in the order it expanded them, one line each, so there are exactly as many lines as *Nodes expanded*. `h` is the Manhattan distance to the nearest treasure, so the treasure's own line is always `h = 0`. The line `Heuristic values: N` is the sum of them, and the window shows the same `Heuristic values: N` under the stats once the animation finishes. It is also reported when no path is found. DFS, BFS and UCS print and show nothing for it. The sum grows with the number of expanded cells, so it is most useful for comparing two runs on the same map.
 - **Runtime** is the time spent inside the search, in seconds. Runtimes change from run to run.
 
 ## Sample Grid
@@ -296,7 +333,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-There is one test file per search in `tests/` (`test_dfs.py`, `test_bfs.py`, `test_ucs.py`, `test_astar.py`, `test_gbfs.py`), plus `test_traps.py` (traps are blocked by every algorithm on random maps and the weight matrix has no trap weights), `test_weights.py` (the random 1 to 99 weights touch only empty cells) and two files for the custom grids.
+There is one test file per search in `tests/` (`test_dfs.py`, `test_bfs.py`, `test_ucs.py`, `test_astar.py`, `test_gbfs.py`), `test_heuristic_values.py` (one value per expanded cell, each equal to `h`, in the report and the sum), plus `test_traps.py` (traps are blocked by every algorithm on random maps and the weight matrix has no trap weights), `test_weights.py` (the random 1 to 99 weights touch only empty cells) and two files for the custom grids.
 
 To exit the environment on either platform, run:
 

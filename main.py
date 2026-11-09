@@ -75,11 +75,14 @@ def run_current_algorithm():
 
     if total_cost is None: #Quick Fix
         total_cost = len(solution) - 1 if solution else 0
-    gui.show_info(total_cost, nodes_expanded, execution_time)
+    heuristic_values = current_algo.heuristic_values  # None for DFS, BFS and UCS
+    heuristic_sum = None if heuristic_values is None else sum(h for _, h in heuristic_values)
+    gui.show_info(total_cost, nodes_expanded, execution_time, heuristic_sum)
 
     print(format_run_report(
         algo_name, solution, nodes_expanded, execution_time, total_cost,
         weights if uses_weights(algo_name) else None,
+        heuristic_values,
     ))
     return visited, solution
 

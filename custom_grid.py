@@ -127,6 +127,7 @@ def main():
         print(format_run_report(
             algo_name, solution, expanded, seconds, cost,
             state["weights"] if algo_name in ("UCS", "A*") else None,
+            algo.heuristic_values,
         ))
 
     def regenerate():

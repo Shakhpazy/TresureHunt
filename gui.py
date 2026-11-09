@@ -293,19 +293,21 @@ class Gui:
         self._animate_cells(self.solution_path, SOLUTION_PATH_BACKGROUND, True)
 
 
-    def show_info(self, total_cost, nodes_expanded, execution_time):
-        self.info = (total_cost, nodes_expanded, execution_time)
+    def show_info(self, total_cost, nodes_expanded, execution_time, heuristic_sum=None):
+        self.info = (total_cost, nodes_expanded, execution_time, heuristic_sum)
 
     def _draw_info(self):
         if not self.info or self.busy:
             return
 
-        total_cost, nodes_expanded, execution_time = self.info
+        total_cost, nodes_expanded, execution_time, heuristic_sum = self.info
         lines = [
             f"Path cost: {total_cost}",
             f"Nodes expanded: {nodes_expanded}",
             f"Time: {execution_time:.4f}s",
         ]
+        if heuristic_sum is not None:  # only A* and GBFS
+            lines.append(f"Heuristic values: {heuristic_sum}")
 
         x = self.selected_algo_button.x
         y = self.selected_algo_button.bottom + 20

@@ -16,6 +16,10 @@ class GBFS(SearchAlgorith):
     DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]]
     AVOID = {TRAP, STATIC_WALLS}
 
+    def __init__(self):
+        # ((row, col), h) of every expanded cell, in expansion order
+        self.heuristic_values = []
+
     def _priority(self, row, col):
         # smaller is expanded first: closest-looking cell, then the smaller
         # row + col, then the smaller row. The last two make ties deterministic.
@@ -28,6 +32,7 @@ class GBFS(SearchAlgorith):
 
         if grid[startr][startc] != START:
             raise ValueError(f"No start cell at {(startr, startc)}.")
+        self.heuristic_values = []  # a reused instance must not keep the last run's values
         self.treasures = [
             (r, c) for r in range(rows) for c in range(cols) if grid[r][c] == TREASURE
         ]
@@ -42,8 +47,9 @@ class GBFS(SearchAlgorith):
         nodes_expanded = 0
 
         while heap:
-            *_, current_r, current_c = heapq.heappop(heap)
+            h, *_, current_r, current_c = heapq.heappop(heap)
             nodes_expanded += 1
+            self.heuristic_values.append(((current_r, current_c), h))
 
             if grid[current_r][current_c] == TREASURE:
                 return seen, (current_r, current_c), nodes_expanded
