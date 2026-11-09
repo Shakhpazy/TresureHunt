@@ -154,6 +154,10 @@ Runtime: 0.000082 seconds
 - It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
 - The tests include 150 seeded random maps per trap mode (blocked and passable) with three treasures, where A* given the same random weights must match UCS's cost.
 
+A* on a random 20x20 map (three treasures, two traps): it took the shortest route to the nearest treasure (path cost 6) after expanding 12 cells.
+
+![A* run](images/A%2Asearch_SC2.png)
+
 Console output for an 8x4 map with a treasure at the top left (cost 5) and another at the bottom right (farther away); with every open cell costing 1:
 
 ```
@@ -194,6 +198,10 @@ Runtime: 0.000034 seconds
 - It is fast but **not optimal**. On 1997 solvable random 20x20 maps it expanded 11 cells on average (BFS: 85), but its path was longer than BFS's on 335 of them (17 %), by 2.7 extra steps on average and up to 14. It finds a path exactly when BFS does, since it never revisits a cell.
 - It uses no weights, so a step costs 1 and the path cost is the number of steps.
 - It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
+
+GBFS on the **same** 20x20 map as the A* screenshot above. It reaches the same treasure but approaches it from above, along a longer route (path cost 8 against A*'s 6), and it expands fewer cells (9 against 12) and has a smaller heuristic sum (28 against 38). That is the tradeoff in one picture: greedy does less work and can pay for it with a worse path.
+
+![GBFS run](images/GBFS_SC.png)
 
 On this 6x5 map `T` sits right under a pair of walls, so greedy marches toward it, runs into the pocket above it, and has to come back around, while BFS goes straight around the walls. The map is `..#S..` / `......` / `......` / `....##` / `.....T`.
 
