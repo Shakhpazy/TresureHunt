@@ -28,7 +28,7 @@ DROPDOWN_SELECTED_BACKGROUND = (45, 85, 165)
 DROPDOWN_BORDER_COLOR = (255, 255, 255)
 DISABLED_BUTTON_BACKGROUND = (70, 85, 130)
 DISABLED_TEXT_COLOR = (150, 160, 190)
-ALGORITHMS = ["DFS", "BFS", "UCS", "A*"]
+ALGORITHMS = ["DFS", "BFS", "UCS", "A*", "GBFS"]
 
 class Gui:
 
@@ -119,7 +119,7 @@ class Gui:
         # the list opens below the header, or above it when there is no room
         list_height = len(ALGORITHMS) * BUTTON_HEIGHT
         top = self.selected_algo_button.bottom
-        if self.custom_grid_names or top + list_height > self.screen.get_height():
+        if top + list_height > self.screen.get_height():
             top = self.selected_algo_button.top - list_height
 
         return [
@@ -293,19 +293,21 @@ class Gui:
         self._animate_cells(self.solution_path, SOLUTION_PATH_BACKGROUND, True)
 
 
-    def show_info(self, total_cost, nodes_expanded, execution_time):
-        self.info = (total_cost, nodes_expanded, execution_time)
+    def show_info(self, total_cost, nodes_expanded, execution_time, heuristic_sum=None):
+        self.info = (total_cost, nodes_expanded, execution_time, heuristic_sum)
 
     def _draw_info(self):
         if not self.info or self.busy:
             return
 
-        total_cost, nodes_expanded, execution_time = self.info
+        total_cost, nodes_expanded, execution_time, heuristic_sum = self.info
         lines = [
             f"Path cost: {total_cost}",
             f"Nodes expanded: {nodes_expanded}",
             f"Time: {execution_time:.4f}s",
         ]
+        if heuristic_sum is not None:  # only A* and GBFS
+            lines.append(f"Heuristic values: {heuristic_sum}")
 
         x = self.selected_algo_button.x
         y = self.selected_algo_button.bottom + 20

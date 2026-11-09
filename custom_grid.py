@@ -87,6 +87,7 @@ def main():
     from algos.dfs import DFS
     from algos.ucs import UCS
     from algos.astar import ASTAR
+    from algos.gbfs import GBFS
     from gui import ALGORITHMS, Gui
     from report import format_run_report
 
@@ -115,6 +116,8 @@ def main():
             if state["weights"] is None:
                 refresh_weights()
             algo = ASTAR(state["weights"], unusual_costs=True)
+        elif algo_name == "GBFS":
+            algo = GBFS()
         else:
             raise ValueError(f"Unknown algorithm: {algo_name}")
 
@@ -124,6 +127,7 @@ def main():
         print(format_run_report(
             algo_name, solution, expanded, seconds, cost,
             state["weights"] if algo_name in ("UCS", "A*") else None,
+            algo.heuristic_values,
         ))
 
     def regenerate():

@@ -14,6 +14,8 @@ class ASTAR(SearchAlgorith):
         self.weights = weights
         # filled in by search(): every treasure cell on the grid it is given
         self.treasures = []
+        # ((row, col), h) of every expanded cell, in expansion order
+        self.heuristic_values = []
         self.unusual_costs = unusual_costs
         self.avoid = {STATIC_WALLS} if unusual_costs else self.AVOID
 
@@ -71,6 +73,7 @@ class ASTAR(SearchAlgorith):
 
     def search(self, grid, startr, startc):
         self._validate(grid, startr, startc)
+        self.heuristic_values = []  # a reused instance must not keep the last run's values
         rows = len(grid)
         cols = len(grid[0])
         start = (startr, startc)
@@ -93,6 +96,7 @@ class ASTAR(SearchAlgorith):
                 continue
 
             expanded.add(current)
+            self.heuristic_values.append((current, self._heuristic(current_r, current_c)))
             if grid[current_r][current_c] == TREASURE:
                 return seen, current, len(expanded), current_cost
 

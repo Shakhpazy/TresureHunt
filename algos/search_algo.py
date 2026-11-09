@@ -6,6 +6,10 @@ VisitedMap = dict[Coord, Coord]
 
 class SearchAlgorith(ABC):
 
+    # Only the heuristic searches (A*, GBFS) set this, to a list of
+    # ((row, col), h) pairs, one per expanded cell in expansion order.
+    heuristic_values = None
+
     @abstractmethod
     def search(
         self,

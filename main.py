@@ -7,6 +7,7 @@ from algos.dfs import DFS
 from algos.bfs import BFS
 from algos.ucs import UCS
 from algos.astar import ASTAR
+from algos.gbfs import GBFS
 from report import format_run_report
 from gui import ALGORITHMS
 from custom_grids import load_custom_grids
@@ -16,7 +17,9 @@ STATIC_WALL_RATIO = 0.15
 
 # only exists while a weighted algorithm is selected
 weights = None
-# random map: traps are walls for every algorithm; custom grids keep them passable for UCS and A*
+# True only while a custom grid is loaded. On the random map traps are walls for
+# every algorithm and only UCS has weights (random). Custom grids are unchanged:
+# traps stay passable for UCS and A*, and both use the constant weight matrix.
 traps_passable = False
 custom_grids = load_custom_grids()
 
@@ -27,12 +30,20 @@ def create_random_map():
     return TreasureMap(size, static_walls).getMap()
 
 
+def uses_weights(algo_name):
+    # UCS always; A* only on custom grids (on the random map it costs 1 per step).
+    # DFS, BFS and GBFS never use weights.
+    return algo_name == "UCS" or (algo_name == "A*" and traps_passable)
+
+
 def refresh_weights():
-    # UCS and A* get a fresh weight matrix; DFS and BFS do not use one.
+    # a fresh matrix for the algorithms that use one; random only on the random map
     global weights
 
-    if ALGORITHMS[gui.current_algo_idx] in ("UCS", "A*"):
-        weights = create_weight_matrix(agent.grid, traps_passable)
+    if uses_weights(ALGORITHMS[gui.current_algo_idx]):
+        weights = create_weight_matrix(
+            agent.grid, traps_passable, random_weights=not traps_passable
+        )
     else:
         weights = None
     gui.set_weights(weights)
@@ -50,9 +61,11 @@ def run_current_algorithm():
             refresh_weights()
         current_algo = UCS(weights, unusual_costs=traps_passable)
     elif algo_name == "A*":
-        if weights is None:
+        if uses_weights(algo_name) and weights is None:
             refresh_weights()
         current_algo = ASTAR(weights, unusual_costs=traps_passable)
+    elif algo_name == "GBFS":
+        current_algo = GBFS()
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
@@ -62,11 +75,14 @@ def run_current_algorithm():
 
     if total_cost is None: #Quick Fix
         total_cost = len(solution) - 1 if solution else 0
-    gui.show_info(total_cost, nodes_expanded, execution_time)
+    heuristic_values = current_algo.heuristic_values  # None for DFS, BFS and UCS
+    heuristic_sum = None if heuristic_values is None else sum(h for _, h in heuristic_values)
+    gui.show_info(total_cost, nodes_expanded, execution_time, heuristic_sum)
 
     print(format_run_report(
         algo_name, solution, nodes_expanded, execution_time, total_cost,
-        weights if algo_name in ("UCS", "A*") else None,
+        weights if uses_weights(algo_name) else None,
+        heuristic_values,
     ))
     return visited, solution
 
