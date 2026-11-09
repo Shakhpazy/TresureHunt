@@ -150,9 +150,6 @@ Runtime: 0.000082 seconds
 
 - It uses a priority queue ordered by `f = g + h`, where `g` is the cost so far and `h` is a guess of the cost still to go. **On the random map every step costs 1, so `g` is just the number of steps and there are no weights to show.** On custom grids it keeps the weight matrix described above (every open cell 1, passable traps 6), as before.
 - The map has several treasures, so `h` is the Manhattan distance (rows plus columns) to the **nearest** treasure. A* finds the treasures by scanning the grid it is given, so it cannot disagree with the map. That `h` never overestimates the cost to the closest treasure and is 0 on every treasure, so A* returns a shortest path, the same length as BFS, with fewer expanded cells: on 1997 solvable random 20x20 maps it expanded fewer cells than BFS on 1981 and never more, averaging 22 against BFS's 85.
-- It stops when it pops a treasure. It raises a `ValueError` if the grid has no treasure, and when it is given weights it validates them with the same rules as UCS.
-- It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
-- The tests include 150 seeded random maps per trap mode (blocked and passable) with three treasures, where A* given the same random weights must match UCS's cost.
 
 A* on a random 20x20 map (three treasures, two traps): it took the shortest route to the nearest treasure (path cost 6) after expanding 12 cells.
 
@@ -196,8 +193,6 @@ Runtime: 0.000034 seconds
 - Ties in `h` are broken by the smaller `row + col`, then the smaller `row`, so a run is always the same. Tied cells can sit on opposite sides of a treasure, where `row + col` and `row` disagree, so both keys matter. `tests/test_gbfs.py` pins the order.
 - A cell is marked when it is first queued (like BFS), which is also when its parent is recorded. It stops when it pops a treasure, and treats walls and traps as impassable. It raises a `ValueError` if the grid has no treasure or no start.
 - It is fast but **not optimal**. On 1997 solvable random 20x20 maps it expanded 11 cells on average (BFS: 85), but its path was longer than BFS's on 335 of them (17 %), by 2.7 extra steps on average and up to 14. It finds a path exactly when BFS does, since it never revisits a cell.
-- It uses no weights, so a step costs 1 and the path cost is the number of steps.
-- It records `h` for every cell it expands, in `algo.heuristic_values` (see *Heuristic values* below).
 
 GBFS on the **same** 20x20 map as the A* screenshot above. It reaches the same treasure but approaches it from above, along a longer route (path cost 8 against A*'s 6), and it expands fewer cells (9 against 12) and has a smaller heuristic sum (28 against 38). That is the tradeoff in one picture: greedy does less work and can pay for it with a worse path.
 
