@@ -132,8 +132,7 @@ class Gui:
             return
 
         self.current_algo_idx = idx
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()  # overlay AND the stats text belong to the old algorithm
         if self.on_algo_change:
             self.on_algo_change()
 
@@ -153,8 +152,7 @@ class Gui:
         self.grid = self.on_custom_grid(idx)
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self._layout_buttons()
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
 
     def _handle_custom_grid_dropdown_click(self, pos):
         if not self.custom_grid_names:
@@ -414,13 +412,11 @@ class Gui:
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self.board_origin_x = 0
         self._layout_buttons()
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
         self.draw_grid()
 
     def reset_overlay(self):
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
         self.draw_grid()
 
     def _set_busy(self, busy):
