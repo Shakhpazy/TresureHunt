@@ -75,7 +75,7 @@ def build_custom_grid(start, traps, treasure, walls, size=GRID_SIZE):
 
 def build_custom_weights(grid, start):
     """Random weights with the custom start cost; traps already cost 6."""
-    weights = create_weight_matrix(grid)
+    weights = create_weight_matrix(grid, traps_passable=True)
     weights[start[0]][start[1]] = START_COST
     return weights
 
@@ -114,12 +114,7 @@ def main():
         elif algo_name == "A*":
             if state["weights"] is None:
                 refresh_weights()
-            algo = ASTAR(
-                state["weights"],
-                unusual_costs=True,
-                treasure_loc_row=TREASURE_POS[0],
-                treasure_loc_col=TREASURE_POS[1],
-            )
+            algo = ASTAR(state["weights"], unusual_costs=True)
         else:
             raise ValueError(f"Unknown algorithm: {algo_name}")
 

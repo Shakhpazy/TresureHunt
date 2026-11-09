@@ -52,11 +52,12 @@ class TreasureMap:
         return row, col
 
 
-def create_weight_matrix(grid):
+def create_weight_matrix(grid, traps_passable=False):
     """Cost of stepping onto each cell for weighted searches.
 
-    Walls are None, traps cost 6, the start is 0, and empty cells and the
-    treasure get a random weight.
+    Walls are None, the start is 0, and empty cells and the treasure get a
+    weight. A trap costs 6 when traps_passable, otherwise it is blocked and
+    has no weight (None), like a wall.
     """
     weights = []
     for row in grid:
@@ -65,7 +66,7 @@ def create_weight_matrix(grid):
             if cell == STATIC_WALLS:
                 weight_row.append(None)
             elif cell == TRAP:
-                weight_row.append(TRAP_COST)
+                weight_row.append(TRAP_COST if traps_passable else None)
             elif cell == START:
                 weight_row.append(0)
             else:

@@ -18,17 +18,27 @@ In the window, choose an algorithm from the **Algorithm** dropdown, click **Run*
 
 ## Grid generation
 
-Each run creates a fixed 10x10 map. 15 % of its cells are static walls, and each map also has one start, one trap and one treasure. Select **Regenerate Grid** to generate a new map.
+Each run creates a random 20x20 map (`GRID_SIZE` in `main.py`). 15 % of its cells are static walls, and each map also has one start, **two traps** and **three treasures**. A search is finished when it reaches *any* of the treasures. Select **Regenerate Grid** to generate a new map.
 
-Use the **Custom Grid** dropdown to load either of the two hand-made maps in `custom_grids/`. Each JSON file has a display name and ten rows using `S` for the start, `T` for treasure, `X` for a trap, `#` for a wall, and `.` for an empty cell.
+**Traps on this random map are blocked, like walls, for all four algorithms.** They never appear on a path, are never visited, and show no weight.
+
+Use the **Custom Grid** dropdown to load either of the two hand-made maps in `custom_grids/`. Each JSON file has a display name and ten rows using `S` for the start, `T` for treasure, `X` for a trap, `#` for a wall, and `.` for an empty cell, with exactly one start and one treasure. **On custom grids, UCS and A* may walk through a trap at a fixed cost of 6** (the trap shows `6`), while DFS and BFS still treat traps as walls, so the four searches do not follow the same rules there. The standalone `python custom_grid.py` window behaves the same way.
+
+## Using the window
+
+- **Run** plays the search as an animation: green cells are the ones reached, then white dots trace the path.
+- While the animation plays, every sidebar button is dimmed and ignores clicks. Clicking on the grid, or pressing a key, skips the rest of the animation.
+- When it ends, the buttons return to normal and the results (path cost, nodes expanded, time) appear.
+- The results text is cleared the moment you click **Run**, switch algorithm (picking the same one again changes nothing), click **Regenerate Grid**, load a **Custom Grid**, or click **Reset View**.
+- Press **G** to toggle the grid lines.
 
 ## Algorithms
 
 Choose an algorithm from the **Algorithm** dropdown in the sidebar, then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
 
-All four searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS and A* also return their total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. Searches cannot step on a wall (`#`) or off the grid. UCS and A* may enter a trap at its fixed cost of 6 when `unusual_costs=True`; setting it to `False` blocks traps.
+All four searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS and A* also return their total cost. `agents.py` rebuilds the path by following the parents from the treasure back to the start. Searches cannot step on a wall (`#`) or off the grid. They also cannot step on a trap (`X`), except that UCS and A* may enter one at its fixed cost of 6 when constructed with `unusual_costs=True`. The default is `unusual_costs=False` (blocked), and only the custom grids turn it on.
 
-The screenshots and console outputs below all come from the same map: `S` (green) is the start, `T` (gold) the treasure, `#` (blue) a wall and `X` (red) the trap.
+The screenshots and console outputs for DFS, BFS and UCS below all come from the same older 10x10 map with a single treasure and one trap: `S` (green) is the start, `T` (gold) the treasure, `#` (blue) a wall and `X` (red) the trap. They were taken before the changes above, so the UCS screenshot still shows `w:number` labels and random weights.
 
 ### DFS (depth-first search, `algos/dfs.py`)
 
@@ -114,10 +124,10 @@ Runtime: 0.000060 seconds
 
 ### UCS (uniform cost search, `algos/ucs.py`)
 
-- UCS uses step costs. Choosing UCS lays a weight matrix over the current map and draws it as `w:number` in each cell: empty cells and the treasure get a random cost from 1 to 99, the start costs 0, traps cost 6, and walls have no cost. `unusual_costs=True` permits entering traps and `False` blocks them. Choosing UCS again in the dropdown, or clicking **Regenerate Grid** while UCS is selected, creates new weights. DFS and BFS never see the weights.
+- UCS uses step costs. Choosing UCS lays a weight matrix over the current map and draws just the number in each cell (the terminal report still writes `w:number`). The start costs 0, walls have no weight, and the weight of a trap depends on the map: **no weight at all on the random map** (blocked), 6 on custom grids (passable). Empty cells and the treasure currently all cost 1, because the random 1 to 99 weights in `create_weight_matrix` (`grid.py`) are commented out. Choosing UCS again in the dropdown, or clicking **Regenerate Grid** while UCS is selected, rebuilds the matrix. DFS and BFS never see the weights.
 - It uses a priority queue (min-heap) ordered by the cost so far, then row, then column. A cell is marked visited when it is **popped**, because the first time a cell is popped it was reached by its cheapest route. Later, more expensive copies are skipped.
 - It returns the cheapest path, which is not always the one with the fewest steps. Below, UCS and BFS both take 5 steps, but UCS's route costs 208 while BFS's route (straight up the right edge) would cost 283 with these weights. When a cheaper route is longer, UCS takes it; the UCS unit tests cover that case.
-- It checks its weights before searching and raises a `ValueError` if they do not match the grid, if a weight below 1 is found (the start is the only 0), or if a wall or trap has a weight.
+- It checks its weights before searching and raises a `ValueError` if they do not match the grid, if a weight below 1 is found (the start is the only 0), if a wall has a weight, or if a trap's weight disagrees with the mode: a blocked trap (`unusual_costs=False`) must have no weight, and a passable one (`unusual_costs=True`) must cost exactly 6.
 
 ![UCS run](images/UCS_SC.png)
 
@@ -136,12 +146,36 @@ Nodes expanded: 20
 Runtime: 0.000082 seconds
 ```
 
+### A* (`algos/astar.py`)
+
+- It uses a priority queue ordered by `f = g + h`, where `g` is the cost so far (the same weights UCS uses) and `h` is a guess of the cost still to go.
+- The map has several treasures, so `h` is the Manhattan distance (rows plus columns) to the **nearest** treasure. A* finds the treasures by scanning the grid it is given, so it cannot disagree with the map. That `h` never overestimates the cost to the closest treasure and is 0 on every treasure, so A* returns a cheapest path, the same cost as UCS, with fewer expanded cells: on 995 solvable random 20x20 maps it expanded fewer cells than UCS on 986, never more, averaging 23 against UCS's 86.
+- It stops when it pops a treasure. It raises a `ValueError` if the grid has no treasure, and uses the same weight rules as UCS.
+- The tests include 150 seeded random maps per trap mode (blocked and passable) with three treasures, where A* must match UCS's cost.
+
+Console output for an 8x4 map with a treasure at the top left (cost 5) and another at the bottom right (farther away); with every open cell costing 1:
+
+```
+=== A* ===
+Coordinates are (row, col), counted from 0 at the top left corner.
+w is the cost of stepping onto a cell (always 1 for DFS and BFS); total is the cost so far.
+(2, 3) w:0 -> total 0
+(2, 2) w:1 -> total 1
+(1, 2) w:1 -> total 2
+(0, 2) w:1 -> total 3
+(0, 1) w:1 -> total 4
+(0, 0) w:1 -> total 5
+Path cost: 5
+Nodes expanded: 13
+Runtime: 0.000037 seconds
+```
+
 ### Reading the output
 
 - Each path line is one cell: its `(row, col)`, the cost of stepping onto it, and the cost so far. The start costs 0, and DFS and BFS charge 1 per step.
 - **Path cost** is the total cost of the path (`n/a` when the treasure cannot be reached, which also prints `No path to the treasure`).
 - **Nodes expanded** is how many cells the search took off its frontier and expanded, counting the treasure cell when it is reached. It is not the same as the path length.
-- **Runtime** is the time spent inside the search, in seconds. Runtimes and UCS weights change from run to run.
+- **Runtime** is the time spent inside the search, in seconds. Runtimes change from run to run.
 
 ## Sample Grid
 
@@ -235,7 +269,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-There is one test file per search in `tests/` (`test_dfs.py`, `test_bfs.py`, `test_ucs.py`), each with three hand-made grids.
+There is one test file per search in `tests/` (`test_dfs.py`, `test_bfs.py`, `test_ucs.py`, `test_astar.py`), plus `test_traps.py` (traps are blocked by every algorithm on random maps and the weight matrix has no trap weights), and two files for the custom grids.
 
 To exit the environment on either platform, run:
 
