@@ -26,6 +26,8 @@ SOLUTION_PATH_SYMBOL_COLOR = (255,255,255)
 WEIGHT_TEXT_COLOR = (0, 0, 0)
 DROPDOWN_SELECTED_BACKGROUND = (45, 85, 165)
 DROPDOWN_BORDER_COLOR = (255, 255, 255)
+DISABLED_BUTTON_BACKGROUND = (70, 85, 130)
+DISABLED_TEXT_COLOR = (150, 160, 190)
 ALGORITHMS = ["DFS", "BFS", "UCS", "A*"]
 
 class Gui:
@@ -71,6 +73,8 @@ class Gui:
         self.info = None
         self.animate_pending = False
         self.skip_animation = False
+        # True only while the search animation plays; the sidebar is locked then
+        self.busy = False
 
     def _layout_buttons(self):
         button_x = self.screen.get_width() - BUTTON_WIDTH - 20
@@ -100,6 +104,17 @@ class Gui:
             CELL_SIZE * len(self.grid),
         )
 
+    def _button_background(self):
+        return DISABLED_BUTTON_BACKGROUND if self.busy else BUTTON_BACKGROUND
+
+    def _button_text_color(self):
+        return DISABLED_TEXT_COLOR if self.busy else BUTTON_TEXT_COLOR
+
+    def _sidebar_rect(self):
+        return pygame.Rect(
+            self.screen.get_width() - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, self.screen.get_height()
+        )
+
     def _dropdown_option_rects(self):
         # the list opens below the header, or above it when there is no room
         list_height = len(ALGORITHMS) * BUTTON_HEIGHT
@@ -117,8 +132,7 @@ class Gui:
             return
 
         self.current_algo_idx = idx
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()  # overlay AND the stats text belong to the old algorithm
         if self.on_algo_change:
             self.on_algo_change()
 
@@ -138,8 +152,7 @@ class Gui:
         self.grid = self.on_custom_grid(idx)
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self._layout_buttons()
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
 
     def _handle_custom_grid_dropdown_click(self, pos):
         if not self.custom_grid_names:
@@ -182,7 +195,7 @@ class Gui:
     def _draw_dropdown(self):
         header = self.selected_algo_button
         header_text = self.button_font.render(
-            f"Algorithm: {ALGORITHMS[self.current_algo_idx]}", True, BUTTON_TEXT_COLOR
+            f"Algorithm: {ALGORITHMS[self.current_algo_idx]}", True, self._button_text_color()
         )
         self.screen.blit(header_text, header_text.get_rect(midleft=(header.x + 10, header.centery)))
 
@@ -192,7 +205,7 @@ class Gui:
             points = [(arrow_x - 6, arrow_y + 3), (arrow_x + 6, arrow_y + 3), (arrow_x, arrow_y - 4)]
         else:
             points = [(arrow_x - 6, arrow_y - 3), (arrow_x + 6, arrow_y - 3), (arrow_x, arrow_y + 4)]
-        pygame.draw.polygon(self.screen, BUTTON_TEXT_COLOR, points)
+        pygame.draw.polygon(self.screen, self._button_text_color(), points)
 
         if not self.dropdown_open:
             return
@@ -212,7 +225,7 @@ class Gui:
         label = "Custom Grid"
         if self.current_custom_grid_idx is not None:
             label = self.custom_grid_names[self.current_custom_grid_idx]
-        header_text = self.button_font.render(label, True, BUTTON_TEXT_COLOR)
+        header_text = self.button_font.render(label, True, self._button_text_color())
         self.screen.blit(header_text, header_text.get_rect(midleft=(header.x + 10, header.centery)))
 
         arrow_x, arrow_y = header.right - 18, header.centery
@@ -220,7 +233,7 @@ class Gui:
             points = [(arrow_x - 6, arrow_y + 3), (arrow_x + 6, arrow_y + 3), (arrow_x, arrow_y - 4)]
         else:
             points = [(arrow_x - 6, arrow_y - 3), (arrow_x + 6, arrow_y - 3), (arrow_x, arrow_y + 4)]
-        pygame.draw.polygon(self.screen, BUTTON_TEXT_COLOR, points)
+        pygame.draw.polygon(self.screen, self._button_text_color(), points)
 
         if not self.custom_grid_dropdown_open:
             return
@@ -244,6 +257,9 @@ class Gui:
         for event in pygame.event.get([pygame.QUIT, pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]):
             if event.type == pygame.QUIT:
                 pygame.event.post(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN and self._sidebar_rect().collidepoint(event.pos):
+                # a locked button: swallow the click, keep animating
+                continue
             return True
         pygame.event.pump()
         return False
@@ -281,7 +297,7 @@ class Gui:
         self.info = (total_cost, nodes_expanded, execution_time)
 
     def _draw_info(self):
-        if not self.info:
+        if not self.info or self.busy:
             return
 
         total_cost, nodes_expanded, execution_time = self.info
@@ -313,7 +329,7 @@ class Gui:
                 y = (r + 1) * CELL_SIZE - 2
                 self.screen.blit(text, text.get_rect(midbottom=(x, y)))
 
-    def draw_grid(self):
+    def _draw_board(self):
         self.screen.fill(BACKGROUND_COLOR)
 
         for row in range(len(self.grid)):
@@ -356,46 +372,38 @@ class Gui:
                 if self.show_grid_lines:
                     pygame.draw.rect(self.screen, GRID_COLOR, rectangle, 1)
 
-        sidebar_area = pygame.Rect(
-            self.screen.get_width() - SIDEBAR_WIDTH,
-            0,
-            SIDEBAR_WIDTH,
-            self.screen.get_height(),
-        )
+    def _draw_sidebar(self):
+        # Everything in the sidebar, in one place, so it is always painted
+        # completely. While self.busy it is drawn dimmed (locked) and the
+        # results are hidden until the animation is over.
+        pygame.draw.rect(self.screen, BUTTON_AREA_BACKGROUND, self._sidebar_rect())
 
-        #DRAWING ALL THE BUTTONS
-        pygame.draw.rect(self.screen, BUTTON_AREA_BACKGROUND, sidebar_area)
-        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.regenerate_button)
-        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.run_button)
-        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.reset_overlay_button)
-        pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.selected_algo_button)
+        background = self._button_background()
+        pygame.draw.rect(self.screen, background, self.regenerate_button)
+        pygame.draw.rect(self.screen, background, self.run_button)
+        pygame.draw.rect(self.screen, background, self.reset_overlay_button)
+        pygame.draw.rect(self.screen, background, self.selected_algo_button)
         if self.custom_grid_names:
-            pygame.draw.rect(self.screen, BUTTON_BACKGROUND, self.custom_grid_button)
+            pygame.draw.rect(self.screen, background, self.custom_grid_button)
 
-        #DRAWING ALL THE TEXT FOR THE BUTTONS
-        regenerate_text = self.button_font.render("Regenerate Grid", True, BUTTON_TEXT_COLOR)
-        self.screen.blit(
-            regenerate_text,
-            regenerate_text.get_rect(center=self.regenerate_button.center),
-        )
+        text_color = self._button_text_color()
+        for label, button in (
+            ("Regenerate Grid", self.regenerate_button),
+            ("Run", self.run_button),
+            ("Reset View", self.reset_overlay_button),
+        ):
+            text = self.button_font.render(label, True, text_color)
+            self.screen.blit(text, text.get_rect(center=button.center))
 
-        run_text = self.button_font.render("Run", True, BUTTON_TEXT_COLOR)
-        self.screen.blit(
-            run_text,
-            run_text.get_rect(center=self.run_button.center),
-        )
-
-        reset_text = self.button_font.render("Reset View", True, BUTTON_TEXT_COLOR)
-        self.screen.blit(
-            reset_text,
-            reset_text.get_rect(center=self.reset_overlay_button.center),
-        )
-
-        self._draw_visited()
-        self._draw_weights()
         self._draw_info()
         self._draw_dropdown()
         self._draw_custom_grid_dropdown()
+
+    def draw_grid(self):
+        self._draw_board()
+        self._draw_sidebar()
+        self._draw_visited()
+        self._draw_weights()
         pygame.display.flip()
 
     def regenerate_grid(self):
@@ -404,21 +412,34 @@ class Gui:
         self.screen = pygame.display.set_mode(self.get_screen_size())
         self.board_origin_x = 0
         self._layout_buttons()
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
         self.draw_grid()
 
     def reset_overlay(self):
-        self.visited = []
-        self.solution_path = []
+        self._clear_results()
         self.draw_grid()
 
+    def _set_busy(self, busy):
+        self.busy = busy
+        if busy:
+            # a "hand" cursor left over Run would suggest it is still clickable
+            pygame.mouse.set_cursor(self.arrow_cursor)
+            self.button_hovered = False
+
     def run_algorithm(self):
-        if self.on_run:
+        if not self.on_run:
+            return
+
+        # lock first, so the sidebar dims on the very frame after the click
+        self._set_busy(True)
+        try:
             self._clear_results()
-            self.draw_grid()
-            self.on_run()
-            self.draw_grid()
+            self.draw_grid()   # instant: dimmed sidebar, old results gone
+            self.on_run()      # compute the search (fast)
+            self.draw_grid()   # animate the overlay
+        finally:
+            self._set_busy(False)
+        self.draw_grid()       # unlock: normal colours, results appear
 
     def _clear_results(self):
         self.visited = []
@@ -483,7 +504,6 @@ class Gui:
                     and event.button == 1
                     and self.run_button.collidepoint(event.pos)
                 ):
-                    self.reset_overlay()
                     self.run_algorithm()
                 elif (
                     event.type == pygame.MOUSEBUTTONDOWN
