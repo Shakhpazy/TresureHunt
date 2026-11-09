@@ -10,7 +10,7 @@ class ASTAR(SearchAlgorith):
     DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def __init__(self, weights=None, unusual_costs=True):
+    def __init__(self, weights=None, unusual_costs=False):
         self.weights = weights
         # filled in by search(): every treasure cell on the grid it is given
         self.treasures = []
@@ -44,8 +44,11 @@ class ASTAR(SearchAlgorith):
                 weight = self.weights[r][c]
                 if cell == STATIC_WALLS and weight is not None:
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
-                if cell == TRAP and weight != TRAP_COST:
-                    raise ValueError(f"Trap weight at {(r, c)} must be {TRAP_COST}.")
+                if cell == TRAP:
+                    if self.unusual_costs and weight != TRAP_COST:
+                        raise ValueError(f"Trap weight at {(r, c)} must be {TRAP_COST}.")
+                    if not self.unusual_costs and weight is not None:
+                        raise ValueError(f"Trap at {(r, c)} is blocked, so it cannot have a weight.")
                 if cell not in (STATIC_WALLS, TRAP) and weight is None:
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
                 if cell == START:

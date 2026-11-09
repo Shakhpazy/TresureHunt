@@ -76,21 +76,34 @@ def test_astar_goes_to_the_cheapest_of_several_treasures():
 
 def test_astar_matches_ucs_cost_on_random_multi_treasure_maps():
     rng = random.Random(435)
-    for _ in range(300):
+    for traps_passable in (False, True):
+        _check_random_maps(rng, traps_passable)
+
+
+def _check_random_maps(rng, traps_passable):
+    for _ in range(150):
         cells = [START] + [TREASURE] * 3 + [TRAP] * 2 + [STATIC_WALLS] * 15
         cells += [EMPTY] * (100 - len(cells))
         rng.shuffle(cells)
         grid = [cells[r * 10:(r + 1) * 10] for r in range(10)]
         weights = [
             [None if cell == STATIC_WALLS
-             else TRAP_COST if cell == TRAP
+             else (TRAP_COST if traps_passable else None) if cell == TRAP
              else 0 if cell == START
              else rng.randint(1, 9)
              for cell in row]
             for row in grid
         ]
 
-        ucs = run_search(UCS(weights), grid)
-        astar = run_search(ASTAR(weights), grid)
+        ucs = run_search(UCS(weights, unusual_costs=traps_passable), grid)
+        astar = run_search(ASTAR(weights, unusual_costs=traps_passable), grid)
 
         assert astar.total_cost == ucs.total_cost
+
+
+def test_astar_blocks_traps_by_default_and_rejects_a_trap_weight():
+    grid = make_grid("SXT")
+
+    assert run_search(ASTAR([[0, None, 1]]), grid).path == []
+    with pytest.raises(ValueError, match="cannot have a weight"):
+        ASTAR([[0, 6, 1]]).search(grid, 0, 0)

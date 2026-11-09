@@ -9,10 +9,10 @@ class UCS(SearchAlgorith):
     DIRECTIONS = [[1,0],[0,1],[-1,0],[0,-1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def __init__(self, weights, unusual_costs=True):
-        # unusual_costs is for special test cases: traps can be walked through
-        # (they need a weight like any open cell) and the start cell's own weight
-        # counts toward the total instead of having to be 0
+    def __init__(self, weights, unusual_costs=False):
+        # unusual_costs=False (default): traps are blocked and have no weight.
+        # unusual_costs=True: traps can be walked through at TRAP_COST, and the
+        # start cell's own weight counts toward the total instead of having to be 0
         self.weights = weights
         self.unusual_costs = unusual_costs
         self.avoid = {STATIC_WALLS} if unusual_costs else self.AVOID
@@ -29,8 +29,11 @@ class UCS(SearchAlgorith):
                 # even when this search is configured not to enter them.
                 if grid[r][c] == STATIC_WALLS and weight is not None:
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
-                if grid[r][c] == TRAP and weight != TRAP_COST:
-                    raise ValueError(f"Trap weight at {(r, c)} must be {TRAP_COST}.")
+                if grid[r][c] == TRAP:
+                    if self.unusual_costs and weight != TRAP_COST:
+                        raise ValueError(f"Trap weight at {(r, c)} must be {TRAP_COST}.")
+                    if not self.unusual_costs and weight is not None:
+                        raise ValueError(f"Trap at {(r, c)} is blocked, so it cannot have a weight.")
                 if grid[r][c] not in (STATIC_WALLS, TRAP) and weight is None:
                     raise ValueError(f"Weights do not match the grid at {(r, c)}.")
                 if grid[r][c] == START:

@@ -16,6 +16,8 @@ STATIC_WALL_RATIO = 0.15
 
 # only exists while a weighted algorithm is selected
 weights = None
+# random map: traps are walls for every algorithm; custom grids keep them passable for UCS and A*
+traps_passable = False
 custom_grids = load_custom_grids()
 
 
@@ -30,7 +32,7 @@ def refresh_weights():
     global weights
 
     if ALGORITHMS[gui.current_algo_idx] in ("UCS", "A*"):
-        weights = create_weight_matrix(agent.grid)
+        weights = create_weight_matrix(agent.grid, traps_passable)
     else:
         weights = None
     gui.set_weights(weights)
@@ -46,11 +48,11 @@ def run_current_algorithm():
     elif algo_name == "UCS":
         if weights is None:
             refresh_weights()
-        current_algo = UCS(weights)
+        current_algo = UCS(weights, unusual_costs=traps_passable)
     elif algo_name == "A*":
         if weights is None:
             refresh_weights()
-        current_algo = ASTAR(weights, unusual_costs=True)
+        current_algo = ASTAR(weights, unusual_costs=traps_passable)
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
@@ -70,6 +72,8 @@ def run_current_algorithm():
 
 
 def regenerate_map():
+    global traps_passable
+    traps_passable = False  # before refresh_weights, which reads it
     new_grid = create_random_map()
     agent.setGrid(new_grid)
     refresh_weights()
@@ -85,6 +89,8 @@ def algorithm_changed():
 
 
 def select_custom_grid(index):
+    global traps_passable
+    traps_passable = True  # before refresh_weights, which reads it
     new_grid = custom_grids[index][1]
     agent.setGrid(new_grid)
     refresh_weights()
