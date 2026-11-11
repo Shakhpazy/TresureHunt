@@ -3,15 +3,23 @@ WEIGHT_LEGEND = "w is the cost of stepping onto a cell (always 1 for DFS and BFS
 
 
 def format_run_report(
-    algo_name, solution, nodes_expanded, execution_time, total_cost=None, weights=None,
+    algo_name, solutions, nodes_expanded, execution_time, total_cost=None, weights=None,
     heuristic_values=None,
 ):
     # DFS and BFS have no weight matrix, so every step onto a cell costs 1 and the start costs 0
     lines = [f"=== {algo_name} ===", LEGEND, WEIGHT_LEGEND]
 
-    if solution:
-        trail, path_cost = _format_cost_trail(solution, weights)
-        lines.extend(trail)
+    if solutions:
+        # Accept both the original single path and the newer list of paths.
+        first = solutions[0]
+        paths = [solutions] if _is_coordinate(first) else solutions
+
+        path_cost = 0
+        for treasure_number, solution in enumerate(paths, start=1):
+            lines.append(f"Path to treasure {treasure_number}:")
+            trail, solution_cost = _format_cost_trail(solution, weights)
+            lines.extend(trail)
+            path_cost += solution_cost
         if total_cost is not None:
             path_cost = total_cost
         cost_line = f"Path cost: {path_cost}"
@@ -27,7 +35,16 @@ def format_run_report(
 
     lines.append(f"Nodes expanded: {nodes_expanded}")
     lines.append(f"Runtime: {execution_time:.6f} seconds")
+    
     return "\n".join(lines)
+
+
+def _is_coordinate(value):
+    return (
+        isinstance(value, (tuple, list))
+        and len(value) == 2
+        and all(isinstance(number, int) for number in value)
+    )
 
 
 def _format_cost_trail(solution, weights):

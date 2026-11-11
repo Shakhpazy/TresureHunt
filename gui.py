@@ -7,23 +7,29 @@ CELL_SIZE = 40
 SIDEBAR_WIDTH = 220
 BUTTON_WIDTH = 180
 BUTTON_HEIGHT = 32
-BACKGROUND_COLOR = (255, 255, 255)
+# Grid palette: quiet neutral cells with high-contrast semantic states.
+BACKGROUND_COLOR = (248, 250, 252)
 BUTTON_AREA_BACKGROUND = (49, 18, 171)
-GRID_COLOR = (0, 0, 0)
-WALL_BACKGROUND = (79, 129, 224)
-TREASURE_BACKGROUND = (255, 193, 29)
-TRAP_BACKGROUND = (255, 0, 0)
-START_BACKGROUND = (34, 177, 76)
+GRID_COLOR = (203, 213, 225)
+WALL_BACKGROUND = (51, 65, 85)
+TREASURE_BACKGROUND = (245, 158, 11)
+TRAP_BACKGROUND = (225, 29, 72)
+START_BACKGROUND = (5, 150, 105)
 BUTTON_BACKGROUND = (79, 129, 224)
 BUTTON_TEXT_COLOR = (255, 255, 255)
-WALL_TEXT_COLOR = (0, 0, 0)
-TREASURE_TEXT_COLOR = (255, 255, 255)
+WALL_TEXT_COLOR = (241, 245, 249)
+TREASURE_TEXT_COLOR = (69, 26, 3)
 TRAP_TEXT_COLOR = (255, 255, 255)
 START_TEXT_COLOR = (255, 255, 255)
-VISITED_BACKGROUND = (94, 237, 136)
-SOLUTION_PATH_BACKGROUND = (94, 237, 136)
-SOLUTION_PATH_SYMBOL_COLOR = (255,255,255)
-WEIGHT_TEXT_COLOR = (0, 0, 0)
+VISITED_BACKGROUND = (186, 214, 255)
+SOLUTION_PATH_COLORS = (
+    (37, 99, 235),    # blue
+    (124, 58, 237),   # violet
+    (219, 39, 119),   # pink
+    (8, 145, 178),    # cyan
+)
+SOLUTION_PATH_SYMBOL_COLOR = (255, 255, 255)
+WEIGHT_TEXT_COLOR = (15, 23, 42)
 DROPDOWN_SELECTED_BACKGROUND = (45, 85, 165)
 DROPDOWN_BORDER_COLOR = (255, 255, 255)
 DISABLED_BUTTON_BACKGROUND = (70, 85, 130)
@@ -67,7 +73,7 @@ class Gui:
         self.dropdown_open = False
         self.custom_grid_dropdown_open = False
         self.current_custom_grid_idx = None
-        self.solution_path = []
+        self.solution_paths = []
         self.visited = []
         self.weights = None
         self.info = None
@@ -90,9 +96,9 @@ class Gui:
     def set_weights(self, weights):
         self.weights = weights
 
-    def set_solution_path(self, solution):
-        self.solution_path = list(solution or [])
-        self.animate_pending = bool(self.solution_path)
+    def set_solution_paths(self, solutions):
+        self.solution_paths = solutions if solutions else []
+        self.animate_pending = any(self.solution_paths)
 
     def set_visited(self, visited):
         self.visited = list(visited or [])
@@ -264,7 +270,7 @@ class Gui:
         pygame.event.pump()
         return False
 
-    def _animate_cells(self, cells, background, with_symbol,waittime = 50):
+    def _animate_cells(self, cells, background, with_symbol,waittime = 20):
         for r, c in cells:
             if not (0 <= r < len(self.grid) and 0 <= c < len(self.grid[0])):
                 continue
@@ -290,7 +296,11 @@ class Gui:
         self.skip_animation = not self.animate_pending
         self.animate_pending = False
         self._animate_cells(self.visited, VISITED_BACKGROUND, False)
-        self._animate_cells(self.solution_path, SOLUTION_PATH_BACKGROUND, True)
+        for path_number, path in enumerate(self.solution_paths):
+            # A distinct hue makes shared sections visibly change as the next
+            # treasure path is animated.
+            path_color = SOLUTION_PATH_COLORS[path_number % len(SOLUTION_PATH_COLORS)]
+            self._animate_cells(path, path_color, True)
 
 
     def show_info(self, total_cost, nodes_expanded, execution_time, heuristic_sum=None):
@@ -445,7 +455,7 @@ class Gui:
 
     def _clear_results(self):
         self.visited = []
-        self.solution_path = []
+        self.solution_paths = []
         self.info = None
         self.animate_pending = False
 

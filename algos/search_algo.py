@@ -16,6 +16,7 @@ class SearchAlgorith(ABC):
         grid,
         startr: int,
         startc: int,
+        treasures: list[Coord] | None
     ) -> tuple[VisitedMap, Coord | tuple[()], int]:
         # (cell -> parent, treasure location or (), nodes expanded);
         # weighted searches add their total path cost as a fourth value

@@ -69,22 +69,22 @@ def run_current_algorithm():
     else:
         raise ValueError(f"Unknown algorithm: {algo_name}")
 
-    visited, solution, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
-    gui.set_solution_path(solution)
+    visited, solutions, execution_time, total_cost, nodes_expanded = agent.run(current_algo)
+    gui.set_solution_paths(solutions)
     gui.set_visited(visited)
 
     if total_cost is None: #Quick Fix
-        total_cost = len(solution) - 1 if solution else 0
+        total_cost = sum(len(solution) for solution in solutions) #sum of lengths of all solution paths TODO check if this is actually correct.
     heuristic_values = current_algo.heuristic_values  # None for DFS, BFS and UCS
     heuristic_sum = None if heuristic_values is None else sum(h for _, h in heuristic_values)
     gui.show_info(total_cost, nodes_expanded, execution_time, heuristic_sum)
 
     print(format_run_report(
-        algo_name, solution, nodes_expanded, execution_time, total_cost,
+        algo_name, solutions, nodes_expanded, execution_time, total_cost,
         weights if uses_weights(algo_name) else None,
         heuristic_values,
     ))
-    return visited, solution
+    return visited, solutions
 
 
 def regenerate_map():
@@ -101,7 +101,7 @@ def algorithm_changed():
     if weights is not None:
         # the old overlay was drawn for a different weight matrix
         gui.set_visited([])
-        gui.set_solution_path([])
+        gui.set_solution_paths([])
 
 
 def select_custom_grid(index):
