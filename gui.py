@@ -270,7 +270,7 @@ class Gui:
         pygame.event.pump()
         return False
 
-    def _animate_cells(self, cells, background, with_symbol,waittime = 20):
+    def _animate_cells(self, cells, background, with_symbol,waittime = 35):
         for r, c in cells:
             if not (0 <= r < len(self.grid) and 0 <= c < len(self.grid[0])):
                 continue

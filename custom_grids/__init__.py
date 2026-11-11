@@ -22,7 +22,5 @@ def load_custom_grids():
         grid = [[CELL_SYMBOLS[symbol] for symbol in row] for row in rows]
         if sum(cell == START for row in grid for cell in row) != 1:
             raise ValueError(f"{path.name} must contain exactly one start (S)")
-        if sum(cell == TREASURE for row in grid for cell in row) != 1:
-            raise ValueError(f"{path.name} must contain exactly one treasure (T)")
         grids.append((data.get("name", path.stem), grid))
     return grids

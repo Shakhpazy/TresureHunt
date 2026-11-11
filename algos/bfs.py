@@ -27,6 +27,8 @@ class BFS(SearchAlgorith):
                 if grid[current_r][current_c] == TREASURE:
                     treasure_locs.add((current_r, current_c))
                     left -= 1
+                    if left == 0:
+                        break
 
                 for dr, dc in self.DIRECTIONS:
                     if (0 <= (current_r + dr) < n and 0 <= (current_c + dc) < m and 

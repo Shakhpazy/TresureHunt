@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 
 Coord = tuple[int, int]
 VisitedMap = dict[Coord, Coord]
+TreasureLocations = tuple[Coord, ...]
+SearchResult = tuple[VisitedMap, TreasureLocations, int]
+WeightedSearchResult = tuple[VisitedMap, TreasureLocations, int, int | None]
 
 
 class SearchAlgorith(ABC):
@@ -17,7 +20,7 @@ class SearchAlgorith(ABC):
         startr: int,
         startc: int,
         treasures: list[Coord] | None
-    ) -> tuple[VisitedMap, Coord | tuple[()], int]:
-        # (cell -> parent, treasure location or (), nodes expanded);
-        # weighted searches add their total path cost as a fourth value
+    ) -> SearchResult | WeightedSearchResult:
+        # (cell -> parent, treasure locations, nodes expanded), with an
+        # optional fourth total-cost value for weighted searches such as UCS.
         ...
