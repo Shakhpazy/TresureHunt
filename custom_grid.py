@@ -122,7 +122,7 @@ def main():
             raise ValueError(f"Unknown algorithm: {algo_name}")
 
         visited, solution, seconds, cost, expanded = agent.run(algo)
-        gui.set_solution_path(solution)
+        gui.set_solution_paths(solution)
         gui.set_visited(visited)
         print(format_run_report(
             algo_name, solution, expanded, seconds, cost,
@@ -140,7 +140,7 @@ def main():
         if state["weights"] is not None:
             # the old overlay was drawn for a different weight matrix
             gui.set_visited([])
-            gui.set_solution_path([])
+            gui.set_solution_paths([])
 
     gui = Gui(grid, regenerate, run_current_algorithm, on_algo_change=algorithm_changed)
     return gui

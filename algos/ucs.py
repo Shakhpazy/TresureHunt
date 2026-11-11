@@ -47,32 +47,41 @@ class UCS(SearchAlgorith):
         if grid[startr][startc] != START:
             raise ValueError(f"No start cell at {(startr, startc)}.")
 
-    def search(self, grid, startr, startc):
+    def search(self, grid, startr, startc, treasures):
+        left = len(treasures) if treasures else 0
         self._validate(grid, startr, startc)
         n = len(grid)
         m = len(grid[0])
 
-        # each entry is (total cost so far, row, col, parent); a cell is only
-        # marked seen when popped, since a cheaper route can still reach it
+        # a cell is only marked seen when popped, since a cheaper route can
+        # still reach it while it is waiting in the priority queue
         start_cost = self.weights[startr][startc] if self.unusual_costs else 0
-        priority_que = [(start_cost, startr, startc, (-1, -1))]
+        priority_que = [(start_cost, startr, startc)]
+        best_cost = {(startr, startc): start_cost}
+        parents = {(startr, startc): (-1, -1)}
         seen = {}
-        treasure_loc = ()
+        treasure_locs = set()
         total_cost = None
 
-        while priority_que:
-            cost, current_r, current_c, parent = heapq.heappop(priority_que)
+        while priority_que and left > 0:
+            cost, current_r, current_c = heapq.heappop(priority_que)
 
-            # stale entry: a cheaper route to this cell was already popped
+            # stale entry: a cheaper route was added after this one
             if (current_r, current_c) in seen:
                 continue
 
-            seen[(current_r, current_c)] = parent
+            current = (current_r, current_c)
+            if cost != best_cost[current]:
+                continue
+
+            seen[current] = parents[current]
 
             if grid[current_r][current_c] == TREASURE:
-                treasure_loc = (current_r, current_c)
+                treasure_locs.add((current_r, current_c))
                 total_cost = cost
-                break
+                left -= 1
+                if left == 0:
+                    break
 
             for dr, dc in self.DIRECTIONS:
                 next_r, next_c = current_r + dr, current_c + dc
@@ -80,8 +89,13 @@ class UCS(SearchAlgorith):
                     (next_r, next_c) not in seen and
                     grid[next_r][next_c] not in self.avoid):
 
-                    heapq.heappush(priority_que,
-                                   (cost + self.weights[next_r][next_c], next_r, next_c, (current_r, current_c)))
+                    next_loc = (next_r, next_c)
+                    new_cost = cost + self.weights[next_r][next_c]
+
+                    if new_cost < best_cost.get(next_loc, float("inf")):
+                        best_cost[next_loc] = new_cost
+                        parents[next_loc] = current
+                        heapq.heappush(priority_que, (new_cost, next_r, next_c))
 
         # UCS marks a cell seen only when popped, so every seen cell was expanded
-        return seen, treasure_loc, len(seen), total_cost
+        return seen, tuple(treasure_locs), len(seen), total_cost

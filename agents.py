@@ -15,8 +15,17 @@ class Agent:
 
         self.startr = 0
         self.startc = 0
-
+        self.treasures = self.getTresuresLoc()
         self.setStart(self.grid)
+
+    def getTresuresLoc(self):
+        tresures = []
+        for r in range(len(self.grid)):
+            for c in range(len(self.grid[0])):
+                if self.grid[r][c] == 'T':
+                    tresures.append((r, c))
+
+        return tresures if tresures else None
 
     def setStart(self, grid):
         for r in range(len(grid)):
@@ -45,13 +54,18 @@ class Agent:
         start_time = time.perf_counter()
 
         # weighted searches (UCS) also return their total cost as a fourth value
-        visited, treasure_loc, nodes_expanded, *extra = algo.search(self.grid, self.startr, self.startc)
+        visited, treasure_locs, nodes_expanded, *extra = algo.search(self.grid, self.startr, self.startc, self.treasures)
         total_cost = extra[0] if extra else None
-        solution_path = self._getSolutionPath(visited, treasure_loc)
+
+        solution_paths = []
+
+        for treasure_loc in treasure_locs:
+            solution_path = self._getSolutionPath(visited, treasure_loc)
+            solution_paths.append(solution_path)
 
         execution_time = time.perf_counter() - start_time
 
         #return a list of solution path, return a list of all paths, return executiontime, return total cost (None if unweighted), return nodes expanded
         visited_loc = self._getVisitedLocs(visited)
 
-        return visited_loc, solution_path, execution_time, total_cost, nodes_expanded
+        return visited_loc, solution_paths, execution_time, total_cost, nodes_expanded
