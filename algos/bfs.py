@@ -18,7 +18,7 @@ class BFS(SearchAlgorith):
         que = deque([(startr, startc)])
         seen = {(startr, startc): (-1, -1)}
         treasure_locs = set()
-        nodes_expanded = 0
+        nodes_expanded = 0        
         while que and left > 0:
             for _ in range(len(que)):
                 current_r, current_c = que.popleft()
