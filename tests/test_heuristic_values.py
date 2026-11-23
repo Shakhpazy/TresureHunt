@@ -32,9 +32,9 @@ def test_one_value_per_expanded_cell_each_equal_to_h_and_zero_at_the_treasure(ma
         assert len(algo.heuristic_values) == nodes_expanded
         for (row, col), h in algo.heuristic_values:
             assert h == nearest_treasure_distance(grid, row, col)
-        if solution:
+        if len(solution) == len(algo.treasures):
             assert algo.heuristic_values[-1][1] == 0       # the treasure is expanded last
-            assert algo.heuristic_values[-1][0] == solution[-1]
+            assert algo.heuristic_values[-1][0] == solution[-1][-1]
 
 
 @pytest.mark.parametrize("make_algo", [lambda: ASTAR(), lambda: GBFS()])

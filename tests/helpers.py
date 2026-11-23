@@ -14,7 +14,12 @@ def make_grid(*rows):
 
 
 def run_search(algo, grid):
-    visited, path, _, total_cost, nodes_expanded = Agent(grid).run(algo)
+    # These are the original first-treasure algorithm tests. Agent.run now
+    # requests all treasures; that interface is covered in test_agent_paths.
+    agent = Agent(grid)
+    visited, treasure, nodes_expanded, *extra = algo.search(grid, agent.startr, agent.startc)
+    path = agent._getSolutionPath(visited, treasure)
+    total_cost = extra[0] if extra else None
     return Result(path, set(visited), nodes_expanded, total_cost)
 
 

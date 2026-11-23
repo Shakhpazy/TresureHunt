@@ -73,8 +73,8 @@ def run_current_algorithm():
     gui.set_solution_paths(solutions)
     gui.set_visited(visited)
 
-    if total_cost is None: #Quick Fix
-        total_cost = sum(len(solution) for solution in solutions) #sum of lengths of all solution paths TODO check if this is actually correct.
+    if total_cost is None and solutions:
+        total_cost = sum(len(solution) - 1 for solution in solutions)
     heuristic_values = current_algo.heuristic_values  # None for DFS, BFS and UCS
     heuristic_sum = None if heuristic_values is None else sum(h for _, h in heuristic_values)
     gui.show_info(total_cost, nodes_expanded, execution_time, heuristic_sum)

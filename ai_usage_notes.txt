@@ -1,5 +1,13 @@
 AI usage notes
 
+- Repository review with OpenAI Codex
+  - Compared the terminal adversarial implementation with the assignment.
+  - Fixed search-interface mismatches and multiple-treasure path/cost reporting.
+  - Added agent and GUI regression tests and ran the test suite and experiments.
+  - Updated README behavior notes and recorded remaining assignment items.
+  - These fixes, tests, and documentation edits are AI-assisted; the team must
+    verify its own contribution statement before submission.
+
 - Testing DFS algorithm
   - testing and asked if my algo is correct
 

@@ -26,7 +26,7 @@ class GBFS(SearchAlgorith):
         h = min(abs(row - r) + abs(col - c) for r, c in self.treasures)
         return (h, row + col, row)
 
-    def search(self, grid, startr, startc):
+    def search(self, grid, startr, startc, treasures=None):
         rows = len(grid)
         cols = len(grid[0])
 
@@ -38,6 +38,8 @@ class GBFS(SearchAlgorith):
         ]
         if not self.treasures:
             raise ValueError("No treasure on the grid.")
+        left = len(self.treasures) if treasures is not None else 1
+        treasure_locs = []
 
         # a cell is marked seen when it is first queued (like BFS), which is
         # also when its parent is recorded. Its priority depends only on the
@@ -52,7 +54,11 @@ class GBFS(SearchAlgorith):
             self.heuristic_values.append(((current_r, current_c), h))
 
             if grid[current_r][current_c] == TREASURE:
-                return seen, (current_r, current_c), nodes_expanded
+                treasure_locs.append((current_r, current_c))
+                left -= 1
+                if left == 0:
+                    goals = tuple(treasure_locs) if treasures is not None else (current_r, current_c)
+                    return seen, goals, nodes_expanded
 
             for dr, dc in self.DIRECTIONS:
                 next_r, next_c = current_r + dr, current_c + dc
@@ -62,4 +68,4 @@ class GBFS(SearchAlgorith):
                     seen[(next_r, next_c)] = (current_r, current_c)
                     heapq.heappush(heap, (*self._priority(next_r, next_c), next_r, next_c))
 
-        return seen, (), nodes_expanded
+        return seen, tuple(treasure_locs), nodes_expanded

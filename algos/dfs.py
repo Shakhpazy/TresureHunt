@@ -8,15 +8,15 @@ class DFS(SearchAlgorith):
     DIRECTIONS = [[1,0],[0,1],[-1,0],[0,-1]]
     AVOID = {TRAP, STATIC_WALLS}
 
-    def search(self, grid, startr, startc, treasures):
-        left = len(treasures) if treasures else 0
+    def search(self, grid, startr, startc, treasures=None):
+        left = len(treasures) if treasures is not None else 1
         n = len(grid)
         m = len(grid[0])
 
         # each entry is (cell, parent); a cell is only marked seen when popped
         stack = [((startr, startc), (-1, -1))]
         seen = {}
-        treasure_loc = set()
+        treasure_loc = []
 
         while stack and left > 0:
             (current_r, current_c), parent = stack.pop()
@@ -28,7 +28,7 @@ class DFS(SearchAlgorith):
             seen[(current_r, current_c)] = parent
 
             if grid[current_r][current_c] == TREASURE:
-                treasure_loc.add((current_r, current_c))
+                treasure_loc.append((current_r, current_c))
                 left -= 1
                 if left == 0:
                     break
@@ -41,5 +41,5 @@ class DFS(SearchAlgorith):
                     stack.append(((current_r + dr, current_c + dc), (current_r, current_c)))
 
         # DFS marks a cell seen only when popped, so every seen cell was expanded
-        print(left)
-        return seen, tuple(treasure_loc), len(seen)
+        goals = tuple(treasure_loc) if treasures is not None else next(iter(treasure_loc), ())
+        return seen, goals, len(seen)

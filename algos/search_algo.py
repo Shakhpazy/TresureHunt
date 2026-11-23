@@ -19,8 +19,10 @@ class SearchAlgorith(ABC):
         grid,
         startr: int,
         startc: int,
-        treasures: list[Coord] | None
+        treasures: list[Coord] | None = None
     ) -> SearchResult | WeightedSearchResult:
+        # Supplying treasures finds all reachable treasures; omitting it keeps
+        # the original first-treasure search and single-coordinate result.
         # (cell -> parent, treasure locations, nodes expanded), with an
         # optional fourth total-cost value for weighted searches such as UCS.
         ...

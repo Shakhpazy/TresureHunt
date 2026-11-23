@@ -18,7 +18,7 @@ In the window, choose an algorithm from the **Algorithm** dropdown, click **Run*
 
 ## Grid generation
 
-Each run creates a random 20x20 map (`GRID_SIZE` in `main.py`). 15 % of its cells are static walls, and each map also has one start, **two traps** and **three treasures**. A search is finished when it reaches *any* of the treasures. Select **Regenerate Grid** to generate a new map.
+Each run creates a random 20x20 map (`GRID_SIZE` in `main.py`). 15 % of its cells are static walls, and each map also has one start, **two traps** and **three treasures**. The window finds a separate path from the start to every reachable treasure. These are independent paths, not one continuous collecting route. Select **Regenerate Grid** to generate a new map. The separate two-player game uses the assignment's 15x15 grid.
 
 **Traps on this random map are blocked, like walls, for all five algorithms.** They never appear on a path, are never visited, and show no weight.
 
@@ -37,6 +37,8 @@ Use the **Custom Grid** dropdown to load either of the two hand-made maps in `cu
 Choose an algorithm from the **Algorithm** dropdown in the sidebar, then click **Run**. Green cells are the cells the search reached and the white dots mark the path it found.
 
 All five searches share one interface (`algos/search_algo.py`): `search(grid, start_row, start_col)` returns the parent of every cell it reached, the treasure's location (`()` if it cannot be reached) and the number of nodes expanded. UCS and A* also return their total cost; DFS, BFS and GBFS do not, so the GUI counts their steps. `agents.py` rebuilds the path by following the parents from the treasure back to the start. Searches cannot step on a wall (`#`) or off the grid. They also cannot step on a trap (`X`), except that UCS and A* may enter one at its fixed cost of 6 when constructed with `unusual_costs=True`. The default is `unusual_costs=False` (blocked), and only the custom grids turn it on.
+
+The window calls `search(grid, start_row, start_col, treasures)` with the treasure list to request **all reachable treasures**. This returns a tuple of treasure coordinates in discovery order. `Agent.run()` returns a list of paths, each starting at S. Path cost is the sum of those independent paths: shared cells count again for each path, and the start costs zero except in the existing custom weighted mode. UCS and A* return the sum of their path costs. An unreachable treasure does not discard paths to reachable ones. Calling `search` without the extra argument retains the original first-treasure behavior used by the algorithm examples and comparisons below.
 
 The screenshots and console outputs for DFS, BFS and UCS below all come from the same older 10x10 map with a single treasure and one trap: `S` (green) is the start, `T` (gold) the treasure, `#` (blue) a wall and `X` (red) the trap. They were taken before the changes above, so the UCS screenshot still shows `w:number` labels and random weights.
 
@@ -343,6 +345,23 @@ Both algorithms were run at depths **2, 4 and 6** (a depth counts one move by on
 
 ## Requirements
 
+### Repository review and verification
+
+The review fixed the A*/GBFS argument mismatch with `Agent.run()`, completed their support for the window's multiple treasure paths, preserved discovery order in DFS/BFS/UCS, and corrected path totals. Trap rules were left unchanged. The original nearest-treasure tests still exercise the three-argument search API; additional tests cover the multiple-path agent and the real GUI callbacks for all five algorithms, both custom maps, reset, and regeneration.
+
+Verification commands:
+
+```bash
+python -m pytest -q
+python -m adversarial.experiments all --maps 3
+```
+
+The three-map run reproduced the node totals in the Minimax/Alpha-Beta table above. Across all three evaluation functions, the measured pruning ratios were 18.3% at depth 2, 48.3% at depth 4, and 74.0% at depth 6. Every paired search agreed on its move and value. The small head-to-head run tied E1 with E2 and favored E1/E2 over E3 by 3 wins to 2 with one draw per pairing at each depth; that sample does not establish an overall best evaluation. Some games still hit the move cap. The larger historical study above uses different sample sizes, and execution times vary by machine.
+
+Remaining assignment items: the terminal game reports treasure counts, paths, nodes, cutoffs, and search time, but does not yet calculate the leaderboard formula. Traps remain blocked, so traps triggered is always zero. The two-player game is not connected to the Pygame window, though terminal human-vs-AI and AI-vs-AI modes already work. There is no optional game-tree visualization or separate contribution-statement PDF in the repository. Team contributions must be supplied and verified by the team before producing that PDF.
+
+### Python version
+
 **Python 3.10 or newer** (developed on 3.13). The code uses the `X | Y` type-union syntax, which raises a `TypeError` on Python 3.9 and older. Check your version with:
 
 ```bash
@@ -429,9 +448,11 @@ deactivate
 
 ### Generative AI Statement
 
+Repository review: OpenAI Codex was used to inspect the assignment coverage, repair the search interfaces and multi-treasure path reporting, add regression tests, run the tests and experiments, and update this documentation. Those changes are AI-assisted. The earlier implementation and attribution statements below are retained; this review does not independently establish each team member's contributions.
+
 Abdulrahman Elmi: I utilized Claude to assist me on working on my parts. I was responsible for the 10×10 change, the UCS skeleton and rename work, running the real window, taking the screenshots, and the pushes and merges. I also decided how the weights work. I ensured that the UCS followed design and look to match consistency with implementation of BFS and DFS by Yusuf.
 
 Claude wrote the UCS search with input validation, and the w:number display in the GUI.
 Claude built the algorithm dropdown and added nodes_expanded to all three searches. It also wrote the labeled console report (Path cost, Nodes expanded, Runtime). Claude wrote 9 pytest tests, 3 per search, using hand-made grids. It checked that they catch broken code by deliberately breaking each algorithm. It also wrote the README quick start and the per-algorithm notes. Claude compared the searches with independent reference implementations on thousands of random maps. It also drove the dropdown and Run flow with simulated events.
 
-Abdulrahman Elmi (Assignment 2): I again used Claude to help me complete my parts. I wrote the Greedy BFS algorithm following the heuristic function Yusuf used for A* search. Claude helped me verify correctness and accuracy of my implementation. I used Claude to write the tests and rewrite UCS to be the only one using random weights from 1-99. I also used it to polish UI, after adding Greedy BFS to the dropdown, it blocked other buttons, so I used it to quickly change how the dropdown menu opened. I also utilized it to show the heuristic values on UI and console. 
+Abdulrahman Elmi (Assignment 2): I again used Claude to help me complete my parts. I wrote the Greedy BFS algorithm following the heuristic function Yusuf used for A* search. Claude helped me verify correctness and accuracy of my implementation. I used Claude to write the tests and rewrite UCS to be the only one using random weights from 1-99. I also used it to polish UI, after adding Greedy BFS to the dropdown, it blocked other buttons, so I used it to quickly change how the dropdown menu opened. I also utilized it to show the heuristic values on UI and console.

@@ -47,8 +47,8 @@ class UCS(SearchAlgorith):
         if grid[startr][startc] != START:
             raise ValueError(f"No start cell at {(startr, startc)}.")
 
-    def search(self, grid, startr, startc, treasures):
-        left = len(treasures) if treasures else 0
+    def search(self, grid, startr, startc, treasures=None):
+        left = len(treasures) if treasures is not None else 1
         self._validate(grid, startr, startc)
         n = len(grid)
         m = len(grid[0])
@@ -60,7 +60,7 @@ class UCS(SearchAlgorith):
         best_cost = {(startr, startc): start_cost}
         parents = {(startr, startc): (-1, -1)}
         seen = {}
-        treasure_locs = set()
+        treasure_locs = []
         total_cost = None
 
         while priority_que and left > 0:
@@ -77,8 +77,8 @@ class UCS(SearchAlgorith):
             seen[current] = parents[current]
 
             if grid[current_r][current_c] == TREASURE:
-                treasure_locs.add((current_r, current_c))
-                total_cost = cost
+                treasure_locs.append((current_r, current_c))
+                total_cost = (total_cost or 0) + cost
                 left -= 1
                 if left == 0:
                     break
@@ -98,4 +98,5 @@ class UCS(SearchAlgorith):
                         heapq.heappush(priority_que, (new_cost, next_r, next_c))
 
         # UCS marks a cell seen only when popped, so every seen cell was expanded
-        return seen, tuple(treasure_locs), len(seen), total_cost
+        goals = tuple(treasure_locs) if treasures is not None else next(iter(treasure_locs), ())
+        return seen, goals, len(seen), total_cost

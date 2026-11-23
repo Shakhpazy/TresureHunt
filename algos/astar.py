@@ -71,8 +71,11 @@ class ASTAR(SearchAlgorith):
             return self.weights[row][col]
         return 1
 
-    def search(self, grid, startr, startc):
+    def search(self, grid, startr, startc, treasures=None):
         self._validate(grid, startr, startc)
+        left = len(self.treasures) if treasures is not None else 1
+        treasure_locs = []
+        total_cost = None
         self.heuristic_values = []  # a reused instance must not keep the last run's values
         rows = len(grid)
         cols = len(grid[0])
@@ -98,7 +101,12 @@ class ASTAR(SearchAlgorith):
             expanded.add(current)
             self.heuristic_values.append((current, self._heuristic(current_r, current_c)))
             if grid[current_r][current_c] == TREASURE:
-                return seen, current, len(expanded), current_cost
+                treasure_locs.append(current)
+                total_cost = (total_cost or 0) + current_cost
+                left -= 1
+                if left == 0:
+                    goals = tuple(treasure_locs) if treasures is not None else current
+                    return seen, goals, len(expanded), total_cost
 
             for dr, dc in self.DIRECTIONS:
                 next_r, next_c = current_r + dr, current_c + dc
@@ -117,5 +125,5 @@ class ASTAR(SearchAlgorith):
                 priority = new_cost + self._heuristic(next_r, next_c)
                 heapq.heappush(heap, (priority, new_cost, next_r, next_c))
 
-        return seen, (), len(expanded), None
+        return seen, tuple(treasure_locs), len(expanded), total_cost
 
