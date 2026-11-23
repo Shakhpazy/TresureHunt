@@ -16,6 +16,8 @@ If `python3 --version` is older than 3.10, create the environment with a newer i
 
 In the window, choose an algorithm from the **Algorithm** dropdown, click **Run**, and read the report in the terminal.
 
+For Assignment 3, click **Two-player game** at the bottom of the sidebar. This opens the 15x15 adversarial game in the same window.
+
 ## Grid generation
 
 Each run creates a random 20x20 map (`GRID_SIZE` in `main.py`). 15 % of its cells are static walls, and each map also has one start, **two traps** and **three treasures**. The window finds a separate path from the start to every reachable treasure. These are independent paths, not one continuous collecting route. Select **Regenerate Grid** to generate a new map. The separate two-player game uses the assignment's 15x15 grid.
@@ -262,9 +264,21 @@ Example 3:
 
 ## Adversarial search (two-agent game)
 
-Agent A (the AI) and agent B (a random agent, another AI, or a human) take turns on a 15x15 map with 3 or 5 treasures (`T`), 2 or 3 traps (`X`) and about 15 % walls (`#`). Each turn an agent moves one cell up, down, left or right. Walls, traps and the other agent's cell are blocked, and stepping on a treasure collects it. The game ends when all treasures are collected (or after 200 moves in total), and the agent with more treasures wins. The code is in `adversarial/` and runs in the terminal; it does not change the search code or the window above.
+Agent A (the AI) and agent B (a random agent, another AI, or a human) take turns on a 15x15 map with 3 or 5 treasures (`T`), 2 or 3 traps (`X`) and about 15 % walls (`#`). Each turn an agent moves one cell up, down, left or right. Walls, traps and the other agent's cell are blocked, and stepping on a treasure collects it. The game ends when all treasures are collected (or after 200 turns in total), and the agent with more treasures wins. The code is in `adversarial/` and can run in the Pygame window or terminal, using the same search algorithms, evaluations, and game rules.
 
-<!-- Add your example screenshot here -->
+### Two-player window
+
+Run `python main.py` and click **Two-player game**, or open it directly with `python -m adversarial.gui`.
+
+- **Mode** cycles through AI vs Random, AI vs AI, and Human vs AI. A is always the AI; in human mode you play B.
+- Click the **A/B algorithm**, **Depth**, and **Evaluation** buttons to cycle through Minimax/Alpha-Beta, depths 2/4/6, and E1/E2/E3. B's search settings are available in AI vs AI. Depth counts individual turns, as in the terminal implementation.
+- **Run game / Pause** starts or pauses automatic turns, with a 35 ms animation delay matching the earlier search window. **Step one turn** advances one turn while paused; during play it becomes **Skip animation**. Click it, click the board during an AI turn, or press **Enter** to skip the remaining animation delays. Other unassigned keys also skip during AI turns. Searches and metrics still run normally, and the window remains responsive. Human moves still wait for the arrow keys or a click on a highlighted neighboring cell. A blocked direction does nothing. A player with no legal move passes. Resetting or starting a new run restores the animation.
+- **Compare both searches** runs Minimax and Alpha-Beta on each AI turn's identical position, depth, and evaluation. The panel totals their nodes and execution times and shows `1 - Alpha-Beta nodes / Minimax nodes` as the observed pruning ratio. It verifies agreement on both the move and value. Comparison adds computation but does not change the chosen move. With comparison off, each AI's own nodes, cutoffs, and time are still shown.
+- **Reset same map** replays the displayed seed with fresh scores and metrics. **New map** generates a different seed. Changing a setting while paused also resets the same map; settings are disabled during automatic play.
+- Green and purple trails show A's and B's actual moves. The window shows treasures collected, remaining treasures, move counts, the current turn, and the final winner or draw. The terminal still logs moves and final paths. Search time excludes animation and human waiting.
+- **Back to search algorithms** restores the previous single-agent map and results. Closing the window exits the app. Keyboard shortcuts: **Space** run/pause, **N** step, **G** grid lines, **Esc** back.
+
+The window uses the existing blocked-trap rule. The leaderboard formula and optional game-tree visualization are separate remaining tasks.
 
 ### How to run
 
@@ -358,7 +372,7 @@ python -m adversarial.experiments all --maps 3
 
 The three-map run reproduced the node totals in the Minimax/Alpha-Beta table above. Across all three evaluation functions, the measured pruning ratios were 18.3% at depth 2, 48.3% at depth 4, and 74.0% at depth 6. Every paired search agreed on its move and value. The small head-to-head run tied E1 with E2 and favored E1/E2 over E3 by 3 wins to 2 with one draw per pairing at each depth; that sample does not establish an overall best evaluation. Some games still hit the move cap. The larger historical study above uses different sample sizes, and execution times vary by machine.
 
-Remaining assignment items: the terminal game reports treasure counts, paths, nodes, cutoffs, and search time, but does not yet calculate the leaderboard formula. Traps remain blocked, so traps triggered is always zero. The two-player game is not connected to the Pygame window, though terminal human-vs-AI and AI-vs-AI modes already work. There is no optional game-tree visualization or separate contribution-statement PDF in the repository. Team contributions must be supplied and verified by the team before producing that PDF.
+Remaining assignment items: the game reports treasure counts, paths, nodes, cutoffs, and search time, but does not yet calculate the leaderboard formula. Traps remain blocked, so traps triggered is always zero. Human-vs-AI and AI-vs-AI modes work in both the terminal and Pygame window. There is no optional game-tree visualization or separate contribution-statement PDF in the repository. Team contributions must be supplied and verified by the team before producing that PDF.
 
 ### Python version
 
@@ -449,6 +463,8 @@ deactivate
 ### Generative AI Statement
 
 Repository review: OpenAI Codex was used to inspect the assignment coverage, repair the search interfaces and multi-treasure path reporting, add regression tests, run the tests and experiments, and update this documentation. Those changes are AI-assisted. The earlier implementation and attribution statements below are retained; this review does not independently establish each team member's contributions.
+
+Two-player GUI: OpenAI Codex assisted with the Pygame view, turn-by-turn session controller, connection to the existing window, interaction/regression tests, and documentation. The GUI reuses the existing adversarial searches, evaluations, generator, and move rules. Rendered previews and automated interactions were checked during development.
 
 Abdulrahman Elmi: I utilized Claude to assist me on working on my parts. I was responsible for the 10×10 change, the UCS skeleton and rename work, running the real window, taking the screenshots, and the pushes and merges. I also decided how the weights work. I ensured that the UCS followed design and look to match consistency with implementation of BFS and DFS by Yusuf.
 

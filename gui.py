@@ -40,7 +40,7 @@ class Gui:
 
     def __init__(
         self, grid, on_regenerate, on_run=None, show_grid_lines=True,
-        on_algo_change=None, custom_grid_names=None, on_custom_grid=None,
+        on_algo_change=None, custom_grid_names=None, on_custom_grid=None, on_adversarial=None,
     ):
         if not grid:
             raise ValueError("2d matrix of size 8x8 or more should be inserted", grid)
@@ -52,6 +52,7 @@ class Gui:
         self.on_algo_change = on_algo_change
         self.custom_grid_names = list(custom_grid_names or [])
         self.on_custom_grid = on_custom_grid
+        self.on_adversarial = on_adversarial
         self.show_grid_lines = show_grid_lines
         self.font = pygame.font.Font(None, 32)
         self.weight_font = pygame.font.Font(None, 18)
@@ -66,6 +67,7 @@ class Gui:
         self.reset_overlay_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.selected_algo_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.custom_grid_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.adversarial_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
         self._layout_buttons()
         pygame.display.set_caption("Treasure Hunt")
 
@@ -92,6 +94,7 @@ class Gui:
         self.reset_overlay_button.topleft = (button_x, start_y + 2 * (BUTTON_HEIGHT + button_spacing))
         self.run_button.topleft = (button_x, start_y + 3 * (BUTTON_HEIGHT + button_spacing))
         self.selected_algo_button.topleft = (button_x, start_y + 4 * (BUTTON_HEIGHT + button_spacing))
+        self.adversarial_button.topleft = (button_x, self.screen.get_height() - BUTTON_HEIGHT - 12)
 
     def set_weights(self, weights):
         self.weights = weights
@@ -408,6 +411,10 @@ class Gui:
             self.screen.blit(text, text.get_rect(center=button.center))
 
         self._draw_info()
+        if self.on_adversarial:
+            pygame.draw.rect(self.screen, background, self.adversarial_button)
+            text = self.button_font.render("Two-player game", True, text_color)
+            self.screen.blit(text, text.get_rect(center=self.adversarial_button.center))
         self._draw_dropdown()
         self._draw_custom_grid_dropdown()
 
@@ -459,6 +466,18 @@ class Gui:
         self.info = None
         self.animate_pending = False
 
+    def open_adversarial(self):
+        self.dropdown_open = False
+        self.custom_grid_dropdown_open = False
+        if not self.on_adversarial():
+            return False
+        # The other view uses the same display. Restore this map and its results.
+        self.screen = pygame.display.set_mode(self.get_screen_size())
+        pygame.display.set_caption("Treasure Hunt")
+        self._layout_buttons()
+        self.draw_grid()
+        return True
+
     def run(self):
         running = True
         self.draw_grid()
@@ -493,6 +512,7 @@ class Gui:
                         or self.run_button.collidepoint(event.pos)
                         or self.reset_overlay_button.collidepoint(event.pos)
                         or self.selected_algo_button.collidepoint(event.pos)
+                        or (self.on_adversarial and self.adversarial_button.collidepoint(event.pos))
                         or (self.custom_grid_names and self.custom_grid_button.collidepoint(event.pos))
                         or (self.dropdown_open and any(
                             rect.collidepoint(event.pos) for rect in self._dropdown_option_rects()
@@ -505,6 +525,13 @@ class Gui:
                         self.button_hovered = hovering
                         cursor = self.hand_cursor if hovering else self.arrow_cursor
                         pygame.mouse.set_cursor(cursor)
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and event.button == 1
+                    and self.on_adversarial
+                    and self.adversarial_button.collidepoint(event.pos)
+                ):
+                    running = self.open_adversarial()
                 elif (
                     event.type == pygame.MOUSEBUTTONDOWN
                     and event.button == 1

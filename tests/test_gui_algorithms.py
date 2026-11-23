@@ -4,6 +4,7 @@ from pathlib import Path
 import pygame
 
 from gui import ALGORITHMS, Gui
+from adversarial.gui import AdversarialGui
 
 
 def test_main_window_runs_every_algorithm_on_random_and_custom_grids(monkeypatch):
@@ -35,5 +36,16 @@ def test_main_window_runs_every_algorithm_on_random_and_custom_grids(monkeypatch
         assert len(window.grid) == 20
         assert window.current_custom_grid_idx is None
         assert window.info is None
+        previous_grid = window.grid
+
+        def play_and_return(view):
+            view.session.step()
+            view.draw()
+            return True
+
+        monkeypatch.setattr(AdversarialGui, "run", play_and_return)
+        assert window.open_adversarial()  # main.py's actual callback opens the new view
+        assert window.grid is previous_grid
+        assert window.screen.get_size() == window.get_screen_size()
     finally:
         pygame.quit()

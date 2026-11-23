@@ -112,6 +112,11 @@ def select_custom_grid(index):
     refresh_weights()
     return new_grid
 
+def open_adversarial():
+    from adversarial.gui import AdversarialGui
+    return AdversarialGui().run()
+
+
 grid = create_random_map()
 agent = Agent(grid)
 gui = Gui(
@@ -121,6 +126,7 @@ gui = Gui(
     on_algo_change=algorithm_changed,
     custom_grid_names=[name for name, _ in custom_grids],
     on_custom_grid=select_custom_grid,
+    on_adversarial=open_adversarial,
 )
 
 

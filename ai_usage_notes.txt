@@ -1,5 +1,12 @@
 AI usage notes
 
+- Two-player GUI with OpenAI Codex
+  - Implemented the Pygame adversarial view and turn-by-turn session controller.
+  - Connected the view to the existing window and reused the adversarial engine.
+  - Added controls, paired search metrics, human input, and actual move trails.
+  - Added interaction/regression tests, inspected rendered previews, and updated the README.
+  - These GUI changes and their tests/documentation are AI-assisted.
+
 - Repository review with OpenAI Codex
   - Compared the terminal adversarial implementation with the assignment.
   - Fixed search-interface mismatches and multiple-treasure path/cost reporting.
