@@ -23,7 +23,7 @@ positional swing (distance 28 + race 5 * W_RACE) with a wide margin, and the lar
 total, 5 * W_LEAD + positional terms, stays below the win value of 1000 so a real win always
 beats a guess. Both facts are checked by tests.
 """
-from adversarial.state import WIN
+from adversarial.state import MAX_PLIES_LIMIT, WIN
 
 W_LEAD = 100  # per treasure of lead: the real objective, so by far the heaviest
 W_DIST = 1    # per step of Manhattan distance: a tie-breaker that steers toward treasure
@@ -92,4 +92,5 @@ EVALUATIONS = {
 # The most any evaluation can return in magnitude: 5 treasures of lead, the largest possible
 # distance term on a 15x15 board, the largest race term, and four traps of exposure each.
 MAX_ABS_EVALUATION = 5 * W_LEAD + W_DIST * 28 + W_RACE * 5 + W_TRAP * 8
-assert MAX_ABS_EVALUATION < WIN, "heuristic values must stay below the value of a real win"
+# the worst win a finished game can score is WIN - MAX_PLIES_LIMIT (a win right at the cap)
+assert MAX_ABS_EVALUATION < WIN - MAX_PLIES_LIMIT, "heuristic values must stay below any real win"

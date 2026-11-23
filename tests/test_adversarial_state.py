@@ -3,7 +3,7 @@ import random
 import pytest
 
 from adversarial.generator import generate_map
-from adversarial.state import A, B, DRAW, LOSS, PASS, WIN, GameState
+from adversarial.state import A, B, DRAW, LOSS, MAX_PLIES_LIMIT, PASS, WIN, GameState
 from tests.adversarial_helpers import make_state
 
 
@@ -134,3 +134,30 @@ def test_utility_is_win_loss_or_draw_by_treasure_count():
     assert state.utility(A) == WIN and state.utility(B) == LOSS
     state.scores = [1, 1]
     assert state.utility(A) == DRAW and state.utility(B) == DRAW
+
+
+def test_a_faster_win_scores_higher_and_a_slower_loss_scores_higher():
+    state = make_state("A..B")
+    state.scores = [2, 1]
+    state.plies = 10
+    early_win, early_loss = state.utility(A), state.utility(B)
+    state.plies = 50
+    late_win, late_loss = state.utility(A), state.utility(B)
+    assert early_win > late_win
+    assert late_loss > early_loss
+    assert early_win == WIN - 10 and late_loss == LOSS + 50
+
+
+def test_even_a_win_at_the_ply_cap_beats_every_heuristic_value():
+    from adversarial.evaluation import MAX_ABS_EVALUATION
+    state = make_state("A..B", max_plies=MAX_PLIES_LIMIT)
+    state.scores = [1, 0]
+    state.plies = MAX_PLIES_LIMIT
+    assert state.utility(A) > MAX_ABS_EVALUATION
+    assert state.utility(B) < -MAX_ABS_EVALUATION
+
+
+@pytest.mark.parametrize("bad_cap", [0, -1, MAX_PLIES_LIMIT + 1, 2.5, "200", None, True])
+def test_an_invalid_ply_cap_is_rejected(bad_cap):
+    with pytest.raises(ValueError, match="max_plies"):
+        make_state("A.TB", max_plies=bad_cap)

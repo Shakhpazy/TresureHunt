@@ -15,12 +15,15 @@ DIRECTIONS = BFS.DIRECTIONS
 BLOCKED_CELLS = (STATIC_WALLS, TRAP)  # traps behave exactly like walls in this game
 
 MAX_PLIES = 200      # safety cap: a ply is one agent's move
-WIN, LOSS, DRAW = 1000, -1000, 0  # utilities of a finished game; evaluations must stay between
+MAX_PLIES_LIMIT = 400  # the largest cap allowed: see utility() for why there must be a limit
+WIN, LOSS, DRAW = 1000, -1000, 0  # base utilities of a finished game, see utility()
 
 
 class GameState:
 
     def __init__(self, game_map, max_plies=MAX_PLIES):
+        if not isinstance(max_plies, int) or isinstance(max_plies, bool) or not 1 <= max_plies <= MAX_PLIES_LIMIT:
+            raise ValueError(f"max_plies must be an integer from 1 to {MAX_PLIES_LIMIT}, got {max_plies!r}")
         self.grid = game_map.grid  # never modified: walls, traps and the starting treasures
         self.rows = len(self.grid)
         self.cols = len(self.grid[0])
@@ -69,12 +72,24 @@ class GameState:
         return not self.treasures or self.plies >= self.max_plies
 
     def utility(self, player):
-        """Result of a finished game from `player`'s point of view: WIN, LOSS or DRAW."""
+        """Result of a finished game from `player`'s point of view.
+
+        A win is worth WIN minus the plies played, a loss LOSS plus the plies played, a draw
+        0. So a faster win beats a slower win, and a slower loss beats a faster loss.
+
+        Why not a flat WIN? Once a player has clinched the game, a flat value makes "capture
+        now" and "capture three moves from now" tie, and a depth-limited search can always see
+        a catch-up later, so it procrastinates forever (seen in testing: a deeper search stalled
+        MORE often). Rewarding speed breaks the tie in favour of finishing.
+
+        Every win is still worth at least WIN - MAX_PLIES_LIMIT, which stays above any
+        heuristic evaluation (evaluation.py checks this), so a real result always beats a guess.
+        """
         difference = self.scores[player] - self.scores[1 - player]
         if difference > 0:
-            return WIN
+            return WIN - self.plies
         if difference < 0:
-            return LOSS
+            return LOSS + self.plies
         return DRAW
 
     def snapshot(self):

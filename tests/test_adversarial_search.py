@@ -19,16 +19,52 @@ def test_blocks_by_racing_when_the_opponent_would_win_the_treasure():
     state = make_state("A.T.B")
     result = Minimax(simple_eval, depth=4).search(state)
     assert result.move == (0, 1)
-    assert result.value == WIN
+    assert result.value == WIN - 3  # A steps, B steps, A captures: the game ends on ply 3
 
 
 def test_depth_decides_how_far_ahead_a_lost_race_is_visible():
     # the only treasure is 3 steps from A and 2 steps from B, A to move, in a 1-wide corridor:
     # B captures it on ply 4 whatever A does. Depth 4 sees that loss; depth 2 cannot.
     state = make_state("A..T.B")
-    assert Minimax(simple_eval, depth=4).search(state).value == LOSS
-    assert AlphaBeta(simple_eval, depth=4).search(state).value == LOSS
-    assert Minimax(simple_eval, depth=2).search(state).value > LOSS
+    assert Minimax(simple_eval, depth=4).search(state).value == LOSS + 4
+    assert AlphaBeta(simple_eval, depth=4).search(state).value == LOSS + 4
+    assert Minimax(simple_eval, depth=2).search(state).value > LOSS + 4
+
+
+def test_a_clinched_agent_takes_the_adjacent_treasure_instead_of_procrastinating():
+    # A already leads 2-0 and the last treasure is next to it, so the game is won whatever
+    # happens. With a flat win value, every move still "wins within the horizon", the first
+    # one in move order (down, away from the treasure) was chosen, and A never finished.
+    state = make_state(
+        "....B",
+        "....T",
+        "....A",
+        ".....",
+        ".....",
+    )
+    state.scores = [2, 0]
+    for algorithm in (Minimax, AlphaBeta):
+        for depth in (2, 4, 6):
+            result = algorithm(simple_eval, depth).search(state)
+            assert result.move == (1, 4), (algorithm.__name__, depth)
+            assert result.value == WIN - 1
+
+
+def test_a_faster_win_is_worth_more_and_a_slower_loss_is_worth_more():
+    # the corridor race from above, but A needs 3 moves and wins either way (B can't interfere)
+    state = make_state(
+        "A.T",
+        "...",
+        "..B",
+    )
+    state.scores = [1, 0]  # clinched: whatever happens A wins, so only speed can separate moves
+    result = Minimax(simple_eval, depth=6).search(state)
+    assert result.move == (0, 1)       # heads straight for the treasure
+    assert result.value == WIN - 3     # and finishes on ply 3
+
+    # the same logic in reverse: a lost game is better the longer it lasts
+    lost = make_state("A..T.B")
+    assert Minimax(simple_eval, depth=4).search(lost).value == LOSS + 4
 
 
 def test_search_leaves_the_state_exactly_as_it_found_it():
@@ -85,7 +121,7 @@ def test_the_player_to_move_is_always_the_maximizer_even_for_agent_b():
     for algorithm in (Minimax, AlphaBeta):
         result = algorithm(simple_eval, depth=2).search(state)
         assert result.move == (0, 4)  # B takes it
-        assert result.value == WIN    # and that is a win from B's own point of view
+        assert result.value == WIN - 2  # a win from B's own point of view, on ply 2
 
 
 def random_midgame_state(seed):
