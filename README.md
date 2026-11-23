@@ -258,6 +258,89 @@ Example 3:
 
 ![Example 3](images/GridExample3.png)
 
+## Adversarial search (two-agent game)
+
+Agent A (the AI) and agent B (a random agent, another AI, or a human) take turns on a 15x15 map with 3 or 5 treasures (`T`), 2 or 3 traps (`X`) and about 15 % walls (`#`). Each turn an agent moves one cell up, down, left or right. Walls, traps and the other agent's cell are blocked, and stepping on a treasure collects it. The game ends when all treasures are collected (or after 200 moves in total), and the agent with more treasures wins. The code is in `adversarial/` and runs in the terminal; it does not change the search code or the window above.
+
+<!-- Add your example screenshot here -->
+
+### How to run
+
+Set up the virtual environment as described in the setup sections below, then run these from the project folder:
+
+```bash
+python -m adversarial.play                                    # AI (Alpha-Beta, depth 4) against a random agent
+python -m adversarial.play --mode human-vs-ai                 # you play: type u, d, l or r, and q to quit
+python -m adversarial.play --mode ai-vs-ai --eval e1 --eval-b e3
+python -m adversarial.play --algo minimax --depth 6 --seed 3  # choose the algorithm, depth and map
+python -m adversarial.experiments all                         # reproduce the tables in this README
+python -m pytest                                              # tests
+```
+
+Each move is printed with the chosen cell, nodes expanded and time, and the board is redrawn every turn. After a game you can replay the same map, generate a new one, or quit. `--seed N` always gives the same map, and `--help` lists every option.
+
+### Evaluation functions
+
+When the search stops at its depth limit with the game unfinished, an evaluation function scores the board for the agent (higher is better). All of them use the Manhattan distance, and each one adds a single idea to the one before:
+
+| Name | Score |
+|---|---|
+| `e1` baseline (default) | 100 x (my treasures - opponent's treasures) + (opponent's distance to the nearest treasure - my distance to it) |
+| `e2` baseline + trap | `e1` - 2 for each trap next to me + 2 for each trap next to the opponent |
+| `e3` baseline + race | `e1` + 5 x (treasures I am closer to than the opponent - treasures the opponent is closer to than me) |
+
+The treasure count has by far the biggest weight on purpose. If a treasure were worth less than the distance the next-nearest treasure can jump to, an agent would hover next to a treasure instead of taking it. A finished game is worth 1000 minus the moves played for a win and the negative of that for a loss, so winning sooner is better. Without this, an agent that has already won puts off the last treasure forever.
+
+**Which one played better?** Head to head (`python -m adversarial.experiments h2h --maps 50`, every pairing played from both sides on 50 maps), `e1` and `e2` are almost equal (47 wins to 43 for `e1` at depth 6) because traps are rare, so the trap penalty seldom changes a move. `e3` is slightly ahead of both (51 wins to 36 against `e2` and 48 to 39 against `e1` at depth 6), but with 100 games per row that is a lean, not a proof.
+
+### Minimax vs Alpha-Beta
+
+Both algorithms were run at depths **2, 4 and 6** (a depth counts one move by one agent, so depth 6 is three moves each) on **three different maps** (seeds 1, 2 and 3), using `e1`. In each game agent A used the algorithm against a random agent B. Nodes expanded and time are totals over all of A's moves in the game, and time is the median of three identical runs. Totals over the three maps:
+
+| Algorithm | Depth | Nodes Expanded | Execution Time(s) | Outcome |
+|---|---|---|---|---|
+| Minimax | 2 | 1850 | 0.0014 | Win (3 of 3 maps) |
+| Alpha-Beta | 2 | 1450 | 0.0011 | Win (3 of 3 maps) |
+| Minimax | 4 | 12051 | 0.0084 | Win (3 of 3 maps) |
+| Alpha-Beta | 4 | 5677 | 0.0042 | Win (3 of 3 maps) |
+| Minimax | 6 | 137461 | 0.0978 | Win (3 of 3 maps) |
+| Alpha-Beta | 6 | 34518 | 0.0259 | Win (3 of 3 maps) |
+
+<details>
+<summary>Every game (3 maps x 3 depths x 2 algorithms)</summary>
+
+| Map | Algorithm  | Depth | Nodes Expanded | Execution Time(s) | Outcome |
+|-----|------------|-------|----------------|-------------------|---------|
+| 1   | Minimax    | 2     | 1312           | 0.0010            | Win     |
+| 1   | Alpha-Beta | 2     | 999            | 0.0007            | Win     |
+| 1   | Minimax    | 4     | 5537           | 0.0038            | Win     |
+| 1   | Alpha-Beta | 4     | 2004           | 0.0015            | Win     |
+| 1   | Minimax    | 6     | 58624          | 0.0408            | Win     |
+| 1   | Alpha-Beta | 6     | 8827           | 0.0064            | Win     |
+| 2   | Minimax    | 2     | 272            | 0.0002            | Win     |
+| 2   | Alpha-Beta | 2     | 224            | 0.0002            | Win     |
+| 2   | Minimax    | 4     | 3262           | 0.0022            | Win     |
+| 2   | Alpha-Beta | 4     | 1692           | 0.0012            | Win     |
+| 2   | Minimax    | 6     | 39468          | 0.0275            | Win     |
+| 2   | Alpha-Beta | 6     | 10428          | 0.0076            | Win     |
+| 3   | Minimax    | 2     | 266            | 0.0002            | Win     |
+| 3   | Alpha-Beta | 2     | 227            | 0.0002            | Win     |
+| 3   | Minimax    | 4     | 3252           | 0.0024            | Win     |
+| 3   | Alpha-Beta | 4     | 1981           | 0.0016            | Win     |
+| 3   | Minimax    | 6     | 39369          | 0.0295            | Win     |
+| 3   | Alpha-Beta | 6     | 15263          | 0.0119            | Win     |
+
+</details>
+
+**Observations**
+
+- **Same moves, less work.** Alpha-Beta always chose the same move as Minimax (the experiment script stops if they ever differ), so both played identical games with identical outcomes. Pruning only changes how many nodes are visited.
+- **Nodes expanded.** Alpha-Beta expanded 22 % fewer nodes at depth 2, 53 % fewer at depth 4 and 75 % fewer at depth 6. The saving grows with depth because a cutoff higher in the tree skips a larger subtree.
+- **Execution time.** Alpha-Beta was 1.3x faster at depth 2, 2.0x at depth 4 and 3.8x at depth 6 (0.098 s against 0.026 s). It follows the node counts, which is what you would expect since each node costs about the same. At depth 2 each search takes microseconds, so the timing difference there is small and noisy.
+- **Effect of depth.** Each 2 extra moves of lookahead multiplies the work: Minimax grew 6.5x from depth 2 to 4 and 11.4x from 4 to 6, while Alpha-Beta grew 3.9x and 6.1x. Even depth 6 takes only about 0.1 s for a whole game, so these depths are cheap.
+- **Outcome.** Every game was a win against a random opponent at every depth, so this table cannot show whether a deeper search plays better: a random opponent is too weak. The head-to-head comparison above plays the evaluation functions against each other instead.
+- **Limitation.** The Manhattan distance ignores walls, so an agent can shuffle in front of a wall that blocks the way to a treasure. I saw this in several stalled games, and a large share of games between two AIs (about 40 % to 65 %) end at the move limit with treasure left on the board. Node counts also depend on how long each game lasts (on map 1 at depth 2 the game ran to the limit), so compare the two algorithms at the same depth and map.
+
 ## Requirements
 
 **Python 3.10 or newer** (developed on 3.13). The code uses the `X | Y` type-union syntax, which raises a `TypeError` on Python 3.9 and older. Check your version with:
